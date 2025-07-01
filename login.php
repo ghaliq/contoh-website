@@ -16,6 +16,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
 
     if ($result->num_rows > 0) { // Jika ada user dengan username tersebut
         $user = $result->fetch_assoc(); // Ambil data user
+        echo "Username yang dimasukkan: " . htmlspecialchars($username) . "<br>";
+        echo "Password yang dimasukkan: " . htmlspecialchars($password) . "<br>";
+        echo "Password hash dari DB: " . htmlspecialchars($user['password']) . "<br>";
+        if (password_verify($password, $user['password'])) {
+            echo "password_verify() mengembalikan: TRUE<br>";
+        } else {
+            echo "password_verify() mengembalikan: FALSE<br>";
+        }
+        echo "Role dari DB: " . htmlspecialchars($user['role']) . "<br>";
+        // Hentikan eksekusi sementara untuk melihat output debug
+        // die("DEBUGGING PASANGAN USERNAME/PASSWORD");
+        // --- AKHIR KODE DEBUGGING ---
         if (password_verify($password, $user['password'])) { // Verifikasi password yang dimasukkan dengan hash di database
             // Jika password cocok, set variabel sesi
             $_SESSION['user_id'] = $user['id'];
