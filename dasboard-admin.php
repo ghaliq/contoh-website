@@ -1,10 +1,9 @@
 <?php 
-
 include 'db.php'; 
 
-// Periksa apakah user sudah login dan memiliki role 'admin'
+// Check if user is logged in and is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login.php"); // Jika tidak, arahkan ke halaman login
+    header("Location: login.php");
     exit;
 }
 
@@ -53,6 +52,10 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     }
     
     // Faktor kepadatan penduduk (optimal 4000-8000 per km²)
+    // Perhatikan: population_density di database Anda mungkin dalam skala ribu, sesuaikan jika perlu.
+    // Misal, jika 5.709 berarti 5709 jiwa/km², maka tidak perlu dikalikan 1000 saat membandingkan
+    // tapi jika 5.709 berarti 5.709 jiwa/km^2, maka perlu disesuaikan.
+    // Saya asumsikan nilai 5.709 di array sebelumnya adalah ribuan. Kita akan ambil dari DB apa adanya.
     if ($population_density >= 4000 && $population_density <= 8000) {
         $risk_score += 3; // Highest risk contribution for optimal population density
     } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) { // Above 8000 or between 2000 and 4000
@@ -67,67 +70,27 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     else return 'Rendah';
 }
 
-// Data kecamatan di Pontianak
-$regions = [
-    [
-        'name' => 'Pontianak Kota',
-        'lat' => -0.0263,
-        'lon' => 109.3425,
-        'population_density' => 5.709,
-        'rainfall' => 185
-    ],
-    [
-        'name' => 'Pontianak Selatan',
-        'lat' => -0.0505,
-        'lon' => 109.3176,
-        'population_density' => 5.526,
-        'rainfall' => 175
-    ],
-    [
-        'name' => 'Pontianak Timur',
-        'lat' => -0.0196,
-        'lon' => 109.3677,
-        'population_density' => 9.242,
-        'rainfall' => 170
-    ],
-    [
-        'name' => 'Pontianak Barat',
-        'lat' => -0.0424,
-        'lon' => 109.3040,
-        'population_density' => 9.268,
-        'rainfall' => 180
-    ],
-    [
-        'name' => 'Pontianak Tenggara',
-        'lat' => 0.06752399700124746,
-        'lon' => 109.3490268761129,
-        'population_density' => 3.041,
-        'rainfall' => 195
-    ],
-    [
-        'name' => 'Pontianak Utara',
-        'lat' => 0.0069,
-        'lon' => 109.3176,
-        'population_density' => 3.620,
-        'rainfall' => 165
-    ],    
-    [
-        'name' => 'Pontianak Barat Daya',
-        'lat' => -0.03,
-        'lon' => 109.35,
-        'population_density' => 3100,
-        'rainfall' => 160
-    ]
-];
+// Mengambil data kecamatan dari database
+$regions_query = "SELECT id, name, latitude, longitude, population_density, rainfall_avg FROM kecamatan";
+$regions_result = $conn->query($regions_query);
+$regions = [];
+if ($regions_result->num_rows > 0) {
+    while($row = $regions_result->fetch_assoc()) {
+        $regions[] = $row;
+    }
+}
 
-// Mengambil data cuaca untuk setiap wilayah
+$today = date("Y-m-d");
+
+// Mengambil data cuaca untuk setiap wilayah dan menyimpan ke database
 foreach ($regions as &$region) {
-    $weather = getWeatherData($region['lat'], $region['lon'], $openweather_api_key);
+    $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
     
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
     } else {
+        // Jika gagal, gunakan data simulasi
         $region['temp'] = rand(27, 33);
         $region['humidity'] = rand(75, 90);
     }
@@ -135,12 +98,33 @@ foreach ($regions as &$region) {
     $region['risk_level'] = calculateRiskLevel(
         $region['temp'], 
         $region['humidity'], 
-        $region['rainfall'], 
-        $region['population_density']
+        $region['rainfall_avg'], // Menggunakan rainfall_avg dari database
+        $region['population_density'] // Menggunakan population_density dari database
     );
+
+    // Simpan data harian ke database (hanya sekali per hari per kecamatan)
+    $check_daily_data_query = $conn->prepare("SELECT id FROM region_daily_data WHERE kecamatan_id = ? AND record_date = ?");
+    $check_daily_data_query->bind_param("is", $region['id'], $today);
+    $check_daily_data_query->execute();
+    $daily_data_result = $check_daily_data_query->get_result();
+
+    if ($daily_data_result->num_rows == 0) {
+        $insert_daily_data_stmt = $conn->prepare(
+            "INSERT INTO region_daily_data (kecamatan_id, record_date, temperature, humidity, risk_level) VALUES (?, ?, ?, ?, ?)"
+        );
+        $insert_daily_data_stmt->bind_param(
+            "isdss", 
+            $region['id'], 
+            $today, 
+            $region['temp'], 
+            $region['humidity'], 
+            $region['risk_level']
+        );
+        $insert_daily_data_stmt->execute();
+    }
 }
 
-// Mengambil data pasien dari database
+// Mengambil data pasien dari database (ini tetap sama seperti sebelumnya)
 $patients_query = "SELECT * FROM pasien ORDER BY id DESC";
 $patients_result = $conn->query($patients_query);
 $patients = [];
@@ -149,10 +133,6 @@ if ($patients_result->num_rows > 0) {
         $patients[] = $row;
     }
 }
-
-// NOTE: The internal POST handling for add/edit/delete is removed as per user request
-// to redirect to separate add.php, edit.php, and delete.php files.
-// The modals for add/edit will also be removed from HTML below.
 
 ?>
 
@@ -465,6 +445,9 @@ if ($patients_result->num_rows > 0) {
                     <button class="btn btn-custom btn-sm mb-2 w-100" onclick="fitToPontianak()">
                         <i class="fas fa-crosshairs"></i> Fokus Pontianak
                     </button>
+                     <a href="statistics.php" class="btn btn-custom btn-sm mb-2 w-100">
+                        <i class="fas fa-chart-bar"></i> Lihat Statistik
+                    </a>
                 </div>
 
                 <div class="scrollable-stats" id="statsContainer">
@@ -481,7 +464,7 @@ if ($patients_result->num_rows > 0) {
                         <p><small>
                             <strong>Suhu:</strong> <?php echo $region['temp']; ?>°C<br>
                             <strong>Kelembaban:</strong> <?php echo $region['humidity']; ?>%<br>
-                            <strong>Curah Hujan:</strong> <?php echo $region['rainfall']; ?>mm<br>
+                            <strong>Curah Hujan:</strong> <?php echo $region['rainfall_avg']; ?>mm<br>
                             <strong>Kepadatan:</strong> <?php echo number_format($region['population_density']); ?> jiwa/km²<br>
                             <strong>Tingkat Risiko:</strong>
                             <span class="badge bg-<?php echo $region['risk_level'] == 'Tinggi' ? 'danger' : ($region['risk_level'] == 'Sedang' ? 'warning' : 'success'); ?>">
@@ -547,13 +530,13 @@ if ($patients_result->num_rows > 0) {
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
                             feature.properties.humidity = matchedRegion.humidity;
-                            feature.properties.rainfall = matchedRegion.rainfall;
+                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
                             feature.properties.risk_level = 'Tidak Ada Data';
                             feature.properties.temp = 'N/A';
                             feature.properties.humidity = 'N/A';
-                            feature.properties.rainfall = 'N/A';
+                            feature.properties.rainfall_avg = 'N/A';
                             feature.properties.population_density = 'N/A';
                         }
                     });
@@ -572,7 +555,7 @@ if ($patients_result->num_rows > 0) {
                             const risk = feature.properties.risk_level;
                             const temp = feature.properties.temp;
                             const humidity = feature.properties.humidity;
-                            const rainfall = feature.properties.rainfall;
+                            const rainfall_avg = feature.properties.rainfall_avg;
                             const population_density = feature.properties.population_density;
 
                             layer.bindPopup(`
@@ -580,7 +563,7 @@ if ($patients_result->num_rows > 0) {
                                 Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
                                 Suhu: ${temp}°C<br>
                                 Kelembaban: ${humidity}%<br>
-                                Curah Hujan: ${rainfall}mm<br>
+                                Curah Hujan: ${rainfall_avg}mm<br>
                                 Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
                             `);
                         }

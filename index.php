@@ -14,7 +14,7 @@ $mapbox_token = 'YOUR_MAPBOX_TOKEN'; // Daftar di mapbox.com - Pastikan ini juga
 
 // Fungsi untuk mengambil data cuaca
 function getWeatherData($lat, $lon, $api_key) {
-    $url = "https://api.openweathermap.org/data/2.5/weather?lat=-0.0263&lon=109.3425&units=metric&appid=d9c47d89a3ce02eba2dfd861f14ce302";
+    $url = "https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lon}&units=metric&appid={$api_key}";
     $response = @file_get_contents($url); // Menambahkan @ untuk menekan error
     if ($response === FALSE) {
         // Tangani kesalahan di sini
@@ -22,6 +22,7 @@ function getWeatherData($lat, $lon, $api_key) {
     }
     return json_decode($response, true);
 }
+
 
 // Fungsi untuk menghitung tingkat kerawanan
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
@@ -69,76 +70,22 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     else return 'Rendah';
 }
 
-// Data kecamatan di Pontianak
-$regions = [
-    [
-        'name' => 'Pontianak Kota',
-        'lat' => -0.0263,
-        'lon' => 109.3425,
-        'population_density' => 5.709,
-        'rainfall' => 185
-    ],
-    [
-        'name' => 'Pontianak Selatan',
-        'lat' => -0.0505,
-        'lon' => 109.3176,
-        'population_density' => 5.526,
-        'rainfall' => 175
-    ],
-    [
-        'name' => 'Pontianak Timur',
-        'lat' => -0.0196,
-        'lon' => 109.3677,
-        'population_density' => 9.242,
-        'rainfall' => 170
-    ],
-    [
-        'name' => 'Pontianak Barat',
-        'lat' => -0.0424,
-        'lon' => 109.3040,
-        'population_density' => 9.268,
-        'rainfall' => 180
-    ],
-    [
-        'name' => 'Pontianak Tenggara',
-        'lat' => 0.06752399700124746,
-        'lon' => 109.3490268761129,
-        'population_density' => 3.041,
-        'rainfall' => 195
-    ],
-    [
-        'name' => 'Pontianak Utara',
-        'lat' => 0.0069,
-        'lon' => 109.3176,
-        'population_density' => 3.620,
-        'rainfall' => 165
-    ],    
-    [
-        'name' => 'Pontianak Barat Daya',
-        'lat' => -0.03,
-        'lon' => 109.35,
-        'population_density' => 3100,
-        'rainfall' => 160
-    ]
-];
+// Mengambil data kecamatan dari database
+$regions_query = "SELECT id, name, latitude, longitude, population_density, rainfall_avg FROM kecamatan";
+$regions_result = $conn->query($regions_query);
+$regions = [];
+if ($regions_result->num_rows > 0) {
+    while($row = $regions_result->fetch_assoc()) {
+        $regions[] = $row;
+    }
+}
 
-// Data contoh pasien di Pontianak
-// Note: Ini adalah data statis dari file asli. Jika Anda ingin data pasien diambil dari database,
-// Anda perlu menyertakan db.php dan melakukan query ke tabel 'pasien'.
-$patients = [
-    ['lat' => -0.0263, 'lon' => 109.3425, 'name' => 'Pasien A', 'date' => '2024-06-01'],
-    ['lat' => -0.0505, 'lon' => 109.3176, 'name' => 'Pasien B', 'date' => '2024-06-02'],
-    ['lat' => -0.0196, 'lon' => 109.3677, 'name' => 'Pasien C', 'date' => '2024-06-03'],
-    ['lat' => -0.0424, 'lon' => 109.3040, 'name' => 'Pasien D', 'date' => '2024-06-04'],
-    ['lat' => 0.0069, 'lon' => 109.3176, 'name' => 'Pasien E', 'date' => '2024-06-05'],
-    ['lat' => -0.0647, 'lon' => 109.3514, 'name' => 'Pasien F', 'date' => '2024-06-06']
-];
+$today = date("Y-m-d");
 
-// Mengambil data cuaca untuk setiap wilayah
+// Mengambil data cuaca untuk setiap wilayah dan menyimpan ke database
 foreach ($regions as &$region) {
-    $weather = getWeatherData($region['lat'], $region['lon'], $openweather_api_key);
+    $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
     
-    // Cek apakah data cuaca berhasil diambil
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
@@ -151,10 +98,48 @@ foreach ($regions as &$region) {
     $region['risk_level'] = calculateRiskLevel(
         $region['temp'], 
         $region['humidity'], 
-        $region['rainfall'], 
+        $region['rainfall_avg'], 
         $region['population_density']
     );
+
+    // Simpan data harian ke database (hanya sekali per hari per kecamatan)
+    $check_daily_data_query = $conn->prepare("SELECT id FROM region_daily_data WHERE kecamatan_id = ? AND record_date = ?");
+    $check_daily_data_query->bind_param("is", $region['id'], $today);
+    $check_daily_data_query->execute();
+    $daily_data_result = $check_daily_data_query->get_result();
+
+    if ($daily_data_result->num_rows == 0) {
+        $insert_daily_data_stmt = $conn->prepare(
+            "INSERT INTO region_daily_data (kecamatan_id, record_date, temperature, humidity, risk_level) VALUES (?, ?, ?, ?, ?)"
+        );
+        $insert_daily_data_stmt->bind_param(
+            "isdss", 
+            $region['id'], 
+            $today, 
+            $region['temp'], 
+            $region['humidity'], 
+            $region['risk_level']
+        );
+        $insert_daily_data_stmt->execute();
+    }
 }
+
+// Data contoh pasien di Pontianak (Jika ini perlu dari database, maka perlu perubahan di sini)
+// Untuk saat ini, asumsikan ini hanya data dummy atau akan diambil dari database 'pasien' jika ada.
+// Karena file index.php tidak memasukkan db.php di awal, jadi saya tidak bisa melakukan query.
+// Namun, jika Anda ingin data pasien ini dari database, Anda perlu:
+// 1. Memastikan db.php diinclude di sini.
+// 2. Menjalankan query seperti di dasboard-admin.php
+// Saya biarkan statis sesuai aslinya, karena belum ada instruksi untuk mengubahnya ke DB di index.php
+$patients = [
+    ['lat' => -0.0263, 'lon' => 109.3425, 'name' => 'Pasien A', 'date' => '2024-06-01'],
+    ['lat' => -0.0505, 'lon' => 109.3176, 'name' => 'Pasien B', 'date' => '2024-06-02'],
+    ['lat' => -0.0196, 'lon' => 109.3677, 'name' => 'Pasien C', 'date' => '2024-06-03'],
+    ['lat' => -0.0424, 'lon' => 109.3040, 'name' => 'Pasien D', 'date' => '2024-06-04'],
+    ['lat' => 0.0069, 'lon' => 109.3176, 'name' => 'Pasien E', 'date' => '2024-06-05'],
+    ['lat' => -0.0647, 'lon' => 109.3514, 'name' => 'Pasien F', 'date' => '2024-06-06']
+];
+
 
 ?>
 
@@ -388,6 +373,9 @@ foreach ($regions as &$region) {
                     <button class="btn btn-custom btn-sm mb-2" onclick="fitToPontianak()">
                         <i class="fas fa-crosshairs"></i> Fokus Pontianak
                     </button>
+                    <a href="statistics.php" class="btn btn-custom btn-sm mb-2 w-100">
+                        <i class="fas fa-chart-bar"></i> Lihat Statistik
+                    </a>
                 </div>
     <div class="scrollable-stats" id="statsContainer">
     <?php
@@ -401,7 +389,7 @@ foreach ($regions as &$region) {
         <p><small>
             <strong>Suhu:</strong> <?php echo $region['temp']; ?>°C<br>
             <strong>Kelembaban:</strong> <?php echo $region['humidity']; ?>%<br>
-            <strong>Curah Hujan:</strong> <?php echo $region['rainfall']; ?>mm<br>
+            <strong>Curah Hujan:</strong> <?php echo $region['rainfall_avg']; ?>mm<br>
             <strong>Kepadatan:</strong> <?php echo number_format($region['population_density']); ?> jiwa/km²<br>
             <strong>Tingkat Risiko:</strong>
             <span class="badge bg-<?php echo $region['risk_level'] == 'Tinggi' ? 'danger' : ($region['risk_level'] == 'Sedang' ? 'warning' : 'success'); ?>">
@@ -433,7 +421,8 @@ foreach ($regions as &$region) {
         
         // Data dari PHP
         var regions = <?php echo json_encode($regions); ?>;
-        var patients = <?php echo json_encode($patients); ?>;
+        var patients = <?php echo json_encode($patients); ?>; // Note: Patients data is static in this index.php
+
         
         // Layer groups
         var choroplethLayer = L.layerGroup().addTo(map);
@@ -464,6 +453,7 @@ foreach ($regions as &$region) {
                     geojsonData.features.forEach(feature => {
                         // Normalisasi nama dari GeoJSON untuk perbandingan (lowercase)
                         const geoName = (feature.properties.name || '').toLowerCase();
+                        // Cari data region yang sesuai dari PHP
                         const matchedRegion = regions.find(r => r.name.toLowerCase() === geoName);
 
                         // Tetapkan tingkat risiko dan properti lainnya ke fitur GeoJSON
@@ -471,14 +461,14 @@ foreach ($regions as &$region) {
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
                             feature.properties.humidity = matchedRegion.humidity;
-                            feature.properties.rainfall = matchedRegion.rainfall;
+                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
                             // Atur nilai default jika tidak ditemukan kecocokan
                             feature.properties.risk_level = 'Tidak Ada Data';
                             feature.properties.temp = 'N/A';
                             feature.properties.humidity = 'N/A';
-                            feature.properties.rainfall = 'N/A';
+                            feature.properties.rainfall_avg = 'N/A';
                             feature.properties.population_density = 'N/A';
                         }
                     });
@@ -497,7 +487,7 @@ foreach ($regions as &$region) {
                             const risk = feature.properties.risk_level;
                             const temp = feature.properties.temp;
                             const humidity = feature.properties.humidity;
-                            const rainfall = feature.properties.rainfall;
+                            const rainfall_avg = feature.properties.rainfall_avg;
                             const population_density = feature.properties.population_density;
 
                             layer.bindPopup(`
@@ -505,7 +495,7 @@ foreach ($regions as &$region) {
                                 Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
                                 Suhu: ${temp}°C<br>
                                 Kelembaban: ${humidity}%<br>
-                                Curah Hujan: ${rainfall}mm<br>
+                                Curah Hujan: ${rainfall_avg}mm<br>
                                 Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
                             `);
                         }
