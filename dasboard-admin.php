@@ -52,10 +52,6 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     }
     
     // Faktor kepadatan penduduk (optimal 4000-8000 per km²)
-    // Perhatikan: population_density di database Anda mungkin dalam skala ribu, sesuaikan jika perlu.
-    // Misal, jika 5.709 berarti 5709 jiwa/km², maka tidak perlu dikalikan 1000 saat membandingkan
-    // tapi jika 5.709 berarti 5.709 jiwa/km^2, maka perlu disesuaikan.
-    // Saya asumsikan nilai 5.709 di array sebelumnya adalah ribuan. Kita akan ambil dari DB apa adanya.
     if ($population_density >= 4000 && $population_density <= 8000) {
         $risk_score += 3; // Highest risk contribution for optimal population density
     } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) { // Above 8000 or between 2000 and 4000
@@ -343,9 +339,9 @@ if ($patients_result->num_rows > 0) {
         .scrollable-stats .stats-card:last-child {
             margin-bottom: 0;
         }
-        .stats-card.tinggi { border-left-color: #dc3545; }
-        .stats-card.sedang { border-left-color: #ffc107; }
-        .stats-card.rendah { border-left-color: #28a745; }
+        .stats-card.tinggi { border-left-color: #D32F2F; } /* Warna baru untuk Tinggi */
+        .stats-card.sedang { border-left-color: #FFB300; } /* Warna baru untuk Sedang */
+        .stats-card.rendah { border-left-color: #66BB6A; } /* Warna baru untuk Rendah */
     </style>
 </head>
 <body>
@@ -414,16 +410,13 @@ if ($patients_result->num_rows > 0) {
                 <div class="legend">
                     <h5><strong>Legenda Tingkat Risiko</strong></h5>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #dc3545;"></div>
-                        <span>Risiko Tinggi</span>
+                        <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ffc107;"></div>
-                        <span>Risiko Sedang</span>
+                        <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #28a745;"></div>
-                        <span>Risiko Rendah</span>
+                        <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #007bff;"></div>
@@ -502,9 +495,9 @@ if ($patients_result->num_rows > 0) {
         // Fungsi untuk mendapatkan warna berdasarkan risiko
         function getRiskColor(risk) {
             switch(risk) {
-                case 'Tinggi': return '#dc3545';
-                case 'Sedang': return '#ffc107';
-                case 'Rendah': return '#28a745';
+                case 'Tinggi': return '#D32F2F'; // Merah Tua
+                case 'Sedang': return '#FFB300'; // Oranye Kekuningan
+                case 'Rendah': return '#66BB6A'; // Hijau Cerah
                 default: return '#6c757d'; // Warna default jika tidak ada data
             }
         }

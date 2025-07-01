@@ -1,5 +1,4 @@
 <?php
-// session_start(); // Baris ini dihapus karena session_start() sudah ada di db.php
 include 'db.php'; // Memasukkan koneksi database dan memulai sesi
 
 // Arahkan ke login jika belum login
@@ -124,13 +123,7 @@ foreach ($regions as &$region) {
     }
 }
 
-// Data contoh pasien di Pontianak (Jika ini perlu dari database, maka perlu perubahan di sini)
-// Untuk saat ini, asumsikan ini hanya data dummy atau akan diambil dari database 'pasien' jika ada.
-// Karena file index.php tidak memasukkan db.php di awal, jadi saya tidak bisa melakukan query.
-// Namun, jika Anda ingin data pasien ini dari database, Anda perlu:
-// 1. Memastikan db.php diinclude di sini.
-// 2. Menjalankan query seperti di dasboard-admin.php
-// Saya biarkan statis sesuai aslinya, karena belum ada instruksi untuk mengubahnya ke DB di index.php
+// Data contoh pasien di Pontianak (tetap statis di sini)
 $patients = [
     ['lat' => -0.0263, 'lon' => 109.3425, 'name' => 'Pasien A', 'date' => '2024-06-01'],
     ['lat' => -0.0505, 'lon' => 109.3176, 'name' => 'Pasien B', 'date' => '2024-06-02'],
@@ -213,9 +206,9 @@ $patients = [
             border-left: 5px solid;
         }
         
-        .stats-card.tinggi { border-left-color: #dc3545; }
-        .stats-card.sedang { border-left-color: #ffc107; }
-        .stats-card.rendah { border-left-color: #28a745; }
+        .stats-card.tinggi { border-left-color: #D32F2F; } /* Warna baru untuk Tinggi */
+        .stats-card.sedang { border-left-color: #FFB300; } /* Warna baru untuk Sedang */
+        .stats-card.rendah { border-left-color: #66BB6A; } /* Warna baru untuk Rendah */
         
         .legend {
             background: white;
@@ -342,16 +335,13 @@ $patients = [
                 <div class="legend">
                     <h5>**Legenda Tingkat Risiko**</h5>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #dc3545;"></div>
-                        <span>Risiko Tinggi</span>
+                        <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #ffc107;"></div>
-                        <span>Risiko Sedang</span>
+                        <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #28a745;"></div>
-                        <span>Risiko Rendah</span>
+                        <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: #007bff;"></div>
@@ -431,9 +421,9 @@ $patients = [
         // Fungsi untuk mendapatkan warna berdasarkan risiko
         function getRiskColor(risk) {
             switch(risk) {
-                case 'Tinggi': return '#dc3545';
-                case 'Sedang': return '#ffc107';
-                case 'Rendah': return '#28a745';
+                case 'Tinggi': return '#D32F2F'; // Merah Tua
+                case 'Sedang': return '#FFB300'; // Oranye Kekuningan
+                case 'Rendah': return '#66BB6A'; // Hijau Cerah
                 default: return '#6c757d'; // Warna default jika tidak ada data
             }
         }
@@ -453,10 +443,8 @@ $patients = [
                     geojsonData.features.forEach(feature => {
                         // Normalisasi nama dari GeoJSON untuk perbandingan (lowercase)
                         const geoName = (feature.properties.name || '').toLowerCase();
-                        // Cari data region yang sesuai dari PHP
                         const matchedRegion = regions.find(r => r.name.toLowerCase() === geoName);
 
-                        // Tetapkan tingkat risiko dan properti lainnya ke fitur GeoJSON
                         if (matchedRegion) {
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
@@ -464,7 +452,6 @@ $patients = [
                             feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
-                            // Atur nilai default jika tidak ditemukan kecocokan
                             feature.properties.risk_level = 'Tidak Ada Data';
                             feature.properties.temp = 'N/A';
                             feature.properties.humidity = 'N/A';
@@ -505,7 +492,6 @@ $patients = [
                 })
                 .catch(error => console.error("Gagal memuat GeoJSON:", error));
         }
-
         
         // Membuat point markers untuk pasien
         function createPatientMarkers() {
