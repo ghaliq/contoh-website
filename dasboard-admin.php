@@ -138,52 +138,10 @@ if ($patients_result->num_rows > 0) {
     }
 }
 
-// Handle form submission untuk tambah/edit/hapus pasien
-if ($_POST) {
-    if (isset($_POST['action'])) {
-        switch ($_POST['action']) {
-            case 'add':
-                $nama = $conn->real_escape_string($_POST['nama']);
-                $jk = $conn->real_escape_string($_POST['jk']);
-                $umur = intval($_POST['umur']);
-                $alamat = $conn->real_escape_string($_POST['alamat']);
-                $lat = floatval($_POST['lat']);
-                $lng = floatval($_POST['lng']);
-                
-                $sql = "INSERT INTO pasien (nama, jenis_kelamin, umur, alamat, latitude, longitude, tanggal_lapor) VALUES ('$nama', '$jk', $umur, '$alamat', $lat, $lng, NOW())";
-                if ($conn->query($sql) === TRUE) {
-                    header("Location: " . $_SERVER['PHP_SELF']);
-                    exit();
-                }
-                break;
-                
-            case 'edit':
-                $id = intval($_POST['id']);
-                $nama = $conn->real_escape_string($_POST['nama']);
-                $jk = $conn->real_escape_string($_POST['jk']);
-                $umur = intval($_POST['umur']);
-                $alamat = $conn->real_escape_string($_POST['alamat']);
-                $lat = floatval($_POST['lat']);
-                $lng = floatval($_POST['lng']);
-                
-                $sql = "UPDATE pasien SET nama='$nama', jenis_kelamin='$jk', umur=$umur, alamat='$alamat', latitude=$lat, longitude=$lng WHERE id=$id";
-                if ($conn->query($sql) === TRUE) {
-                    header("Location: " . $_SERVER['PHP_SELF']);
-                    exit();
-                }
-                break;
-                
-            case 'delete':
-                $id = intval($_POST['id']);
-                $sql = "DELETE FROM pasien WHERE id=$id";
-                if ($conn->query($sql) === TRUE) {
-                    header("Location: " . $_SERVER['PHP_SELF']);
-                    exit();
-                }
-                break;
-        }
-    }
-}
+// NOTE: The internal POST handling for add/edit/delete is removed as per user request
+// to redirect to separate add.php, edit.php, and delete.php files.
+// The modals for add/edit will also be removed from HTML below.
+
 ?>
 
 <!DOCTYPE html>
@@ -408,9 +366,9 @@ if ($_POST) {
         <div class="table-container">
             <div class="table-header">
                 <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
-                <button class="btn btn-add" data-bs-toggle="modal" data-bs-target="#addPatientModal">
+                <a href="add.php" class="btn btn-add">
                     <i class="fas fa-plus"></i> Tambah Pasien
-                </button>
+                </a>
             </div>
             
             <div class="table-responsive">
@@ -440,12 +398,12 @@ if ($_POST) {
                             <td><?php echo $patient['longitude']; ?></td>
                             <td><?php echo date('d/m/Y', strtotime($patient['tanggal_lapor'])); ?></td>
                             <td>
-                                <button class="btn btn-sm btn-warning me-1" onclick="editPatient(<?php echo htmlspecialchars(json_encode($patient)); ?>)">
+                                <a href="edit.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-warning me-1">
                                     <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="deletePatient(<?php echo $patient['id']; ?>)">
+                                </a>
+                                <a href="delete.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?');">
                                     <i class="fas fa-trash"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -524,111 +482,6 @@ if ($_POST) {
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="addPatientModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-plus"></i> Tambah Pasien Baru</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST">
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="add">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" name="nama" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Jenis Kelamin</label>
-                            <select class="form-control" name="jk" required>
-                                <option value="">Pilih...</option>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Umur</label>
-                            <input type="number" class="form-control" name="umur" required min="0">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea class="form-control" name="alamat" rows="2" required></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">Latitude</label>
-                                <input type="number" step="any" class="form-control" name="lat" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Longitude</label>
-                                <input type="number" step="any" class="form-control" name="lng" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-add">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editPatientModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Pasien</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" id="editForm">
-                    <div class="modal-body">
-                        <input type="hidden" name="action" value="edit">
-                        <input type="hidden" name="id" id="edit_id">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" name="nama" id="edit_nama" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Jenis Kelamin</label>
-                            <select class="form-control" name="jk" id="edit_jk" required>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Umur</label>
-                            <input type="number" class="form-control" name="umur" id="edit_umur" required min="0">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea class="form-control" name="alamat" id="edit_alamat" rows="2" required></textarea>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">Latitude</label>
-                                <input type="number" step="any" class="form-control" name="lat" id="edit_lat" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Longitude</label>
-                                <input type="number" step="any" class="form-control" name="lng" id="edit_lng" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-warning">Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <form method="POST" id="deleteForm" style="display: none;">
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="id" id="delete_id">
-    </form>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -775,28 +628,6 @@ if ($_POST) {
         
         function fitToPontianak() {
             map.setView([-0.0263, 109.3425], 12);
-        }
-        
-        // Fungsi untuk edit pasien
-        function editPatient(patient) {
-            document.getElementById('edit_id').value = patient.id;
-            document.getElementById('edit_nama').value = patient.nama;
-            document.getElementById('edit_jk').value = patient.jenis_kelamin;
-            document.getElementById('edit_umur').value = patient.umur;
-            document.getElementById('edit_alamat').value = patient.alamat;
-            document.getElementById('edit_lat').value = patient.latitude;
-            document.getElementById('edit_lng').value = patient.longitude;
-            
-            var modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
-            modal.show();
-        }
-        
-        // Fungsi untuk hapus pasien
-        function deletePatient(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus data pasien ini?')) {
-                document.getElementById('delete_id').value = id;
-                document.getElementById('deleteForm').submit();
-            }
         }
         
         // Inisialisasi
