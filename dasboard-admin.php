@@ -18,38 +18,43 @@ function getWeatherData($lat, $lon, $api_key) {
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
     
+    // Faktor suhu (optimal 25-30°C)
     if ($temp >= 25 && $temp <= 30) {
-        $risk_score += 3;
+        $risk_score += 3; // Highest risk contribution for optimal temperature
     } elseif ($temp >= 20 && $temp <= 35) {
-        $risk_score += 2;
+        $risk_score += 2; // Medium risk contribution for slightly outside optimal
     } else {
-        $risk_score += 1;
+        $risk_score += 1; // Lowest risk contribution for temperatures far from optimal
     }
     
-    if ($humidity >= 70 && $temp <= 90) {
-        $risk_score += 3;
-    } elseif ($humidity >= 60  && $temp <= 95)  {
-        $risk_score += 2;
+    // Faktor kelembaban (optimal 70-90%)
+    if ($humidity >= 70 && $humidity <= 90) {
+        $risk_score += 3; // Highest risk contribution for optimal humidity
+    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) { // Above 90% or between 60% and 70%
+        $risk_score += 2; // Medium risk contribution
     } else {
-        $risk_score += 1;
+        $risk_score += 1; // Lowest risk contribution (below 60%)
     }
     
-    if ($rainfall >= 100 && $temp <= 300) {
-        $risk_score += 3;
-    } elseif ($rainfall > 50 && $temp <= 350) {
-        $risk_score += 2;
+    // Faktor curah hujan (optimal 100-300mm)
+    if ($rainfall >= 100 && $rainfall <= 300) {
+        $risk_score += 3; // Highest risk contribution for optimal rainfall
+    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) { // Above 300mm or between 50mm and 100mm
+        $risk_score += 2; // Medium risk contribution
     } else {
-        $risk_score += 1;
+        $risk_score += 1; // Lowest risk contribution (below 50mm)
     }
     
-    if ($population_density > 5000) {
-        $risk_score += 3;
-    } elseif ($population_density > 2000) {
-        $risk_score += 2;
+    // Faktor kepadatan penduduk (optimal 4000-8000 per km²)
+    if ($population_density >= 4000 && $population_density <= 8000) {
+        $risk_score += 3; // Highest risk contribution for optimal population density
+    } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) { // Above 8000 or between 2000 and 4000
+        $risk_score += 2; // Medium risk contribution
     } else {
-        $risk_score += 1;
+        $risk_score += 1; // Lowest risk contribution (below 2000)
     }
     
+    // Kategorisasi risiko
     if ($risk_score >= 10) return 'Tinggi';
     elseif ($risk_score >= 7) return 'Sedang';
     else return 'Rendah';
@@ -61,42 +66,42 @@ $regions = [
         'name' => 'Pontianak Kota',
         'lat' => -0.0263,
         'lon' => 109.3425,
-        'population_density' => 8500,
+        'population_density' => 5.709,
         'rainfall' => 185
     ],
     [
         'name' => 'Pontianak Selatan',
         'lat' => -0.0505,
         'lon' => 109.3176,
-        'population_density' => 6200,
+        'population_density' => 5.526,
         'rainfall' => 175
     ],
     [
         'name' => 'Pontianak Timur',
         'lat' => -0.0196,
         'lon' => 109.3677,
-        'population_density' => 4800,
+        'population_density' => 9.242,
         'rainfall' => 170
     ],
     [
         'name' => 'Pontianak Barat',
         'lat' => -0.0424,
         'lon' => 109.3040,
-        'population_density' => 3900,
+        'population_density' => 9.268,
         'rainfall' => 180
     ],
     [
         'name' => 'Pontianak Tenggara',
         'lat' => 0.06752399700124746,
         'lon' => 109.3490268761129,
-        'population_density' => 3700,
+        'population_density' => 3.041,
         'rainfall' => 195
     ],
     [
         'name' => 'Pontianak Utara',
         'lat' => 0.0069,
         'lon' => 109.3176,
-        'population_density' => 2800,
+        'population_density' => 3.620,
         'rainfall' => 165
     ],    
     [
