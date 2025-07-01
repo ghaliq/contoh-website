@@ -144,13 +144,13 @@ if ($_POST) {
         switch ($_POST['action']) {
             case 'add':
                 $nama = $conn->real_escape_string($_POST['nama']);
-                $jk = $conn->real_escape_string($_POST['jenis_kelamin']);
+                $jk = $conn->real_escape_string($_POST['jk']);
                 $umur = intval($_POST['umur']);
                 $alamat = $conn->real_escape_string($_POST['alamat']);
-                $lat = floatval($_POST['latitude']);
-                $lng = floatval($_POST['lngtidue']);
+                $lat = floatval($_POST['lat']);
+                $lng = floatval($_POST['lng']);
                 
-                $sql = "INSERT INTO pasien (nama, jk, umur, alamat, lat, lng, tanggal) VALUES ('$nama', '$jk', $umur, '$alamat', $lat, $lng, NOW())";
+                $sql = "INSERT INTO pasien (nama, jenis_kelamin, umur, alamat, latitude, longitude, tanggal_lapor) VALUES ('$nama', '$jk', $umur, '$alamat', $lat, $lng, NOW())";
                 if ($conn->query($sql) === TRUE) {
                     header("Location: " . $_SERVER['PHP_SELF']);
                     exit();
@@ -166,7 +166,7 @@ if ($_POST) {
                 $lat = floatval($_POST['lat']);
                 $lng = floatval($_POST['lng']);
                 
-                $sql = "UPDATE pasien SET nama='$nama', jk='$jk', umur=$umur, alamat='$alamat', lat=$lat, lng=$lng WHERE id=$id";
+                $sql = "UPDATE pasien SET nama='$nama', jenis_kelamin='$jk', umur=$umur, alamat='$alamat', latitude=$lat, longitude=$lng WHERE id=$id";
                 if ($conn->query($sql) === TRUE) {
                     header("Location: " . $_SERVER['PHP_SELF']);
                     exit();
@@ -360,7 +360,6 @@ if ($_POST) {
             <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
         </div>
         
-        <!-- Tabel Data Pasien -->
         <div class="table-container">
             <div class="table-header">
                 <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
@@ -410,7 +409,6 @@ if ($_POST) {
             </div>
         </div>
         
-        <!-- Peta dan Kontrol -->
         <div class="row">
             <div class="col-lg-9">
                 <div id="map"></div>
@@ -456,7 +454,6 @@ if ($_POST) {
         </div>
     </div>
 
-    <!-- Modal Tambah Pasien -->
     <div class="modal fade" id="addPatientModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -475,8 +472,8 @@ if ($_POST) {
                             <label class="form-label">Jenis Kelamin</label>
                             <select class="form-control" name="jk" required>
                                 <option value="">Pilih...</option>
-                                <option value="L">Laki-laki</option>
-                                <option value="P">Perempuan</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -507,7 +504,6 @@ if ($_POST) {
         </div>
     </div>
 
-    <!-- Modal Edit Pasien -->
     <div class="modal fade" id="editPatientModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -526,8 +522,8 @@ if ($_POST) {
                         <div class="mb-3">
                             <label class="form-label">Jenis Kelamin</label>
                             <select class="form-control" name="jk" id="edit_jk" required>
-                                <option value="L">Laki-laki</option>
-                                <option value="P">Perempuan</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -558,7 +554,6 @@ if ($_POST) {
         </div>
     </div>
 
-    <!-- Form Delete (Hidden) -->
     <form method="POST" id="deleteForm" style="display: none;">
         <input type="hidden" name="action" value="delete">
         <input type="hidden" name="id" id="delete_id">
@@ -589,31 +584,73 @@ if ($_POST) {
                 case 'Tinggi': return '#dc3545';
                 case 'Sedang': return '#ffc107';
                 case 'Rendah': return '#28a745';
-                default: return '#6c757d';
+                default: return '#6c757d'; // Warna default jika tidak ada data
             }
         }
         
-        // Membuat choropleth untuk wilayah
+        // Membuat choropleth untuk wilayah dari GeoJSON
         function createChoropleth() {
             choroplethLayer.clearLayers();
             
-            regions.forEach(function(region) {
-                var circle = L.circle([region.lat, region.lon], {
-                    color: getRiskColor(region.risk_level),
-                    fillColor: getRiskColor(region.risk_level),
-                    fillOpacity: 0.5,
-                    radius: 2000
-                }).addTo(choroplethLayer);
-                
-                circle.bindPopup(`
-                    <strong>${region.name}</strong><br>
-                    Tingkat Risiko: <span style="color:${getRiskColor(region.risk_level)}; font-weight:bold">${region.risk_level}</span><br>
-                    Suhu: ${region.temp}°C<br>
-                    Kelembaban: ${region.humidity}%<br>
-                    Curah Hujan: ${region.rainfall}mm<br>
-                    Kepadatan Penduduk: ${region.population_density.toLocaleString()} jiwa/km²
-                `);
-            });
+            // Asumsi file GeoJSON berada di direktori yang sama atau dapat diakses secara publik
+            fetch("kecamatan_pontianak.geojson") 
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Kesalahan HTTP! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(geojsonData => {
+                    geojsonData.features.forEach(feature => {
+                        const geoName = (feature.properties.name || '').toLowerCase();
+                        const matchedRegion = regions.find(r => r.name.toLowerCase() === geoName);
+
+                        if (matchedRegion) {
+                            feature.properties.risk_level = matchedRegion.risk_level;
+                            feature.properties.temp = matchedRegion.temp;
+                            feature.properties.humidity = matchedRegion.humidity;
+                            feature.properties.rainfall = matchedRegion.rainfall;
+                            feature.properties.population_density = matchedRegion.population_density;
+                        } else {
+                            feature.properties.risk_level = 'Tidak Ada Data';
+                            feature.properties.temp = 'N/A';
+                            feature.properties.humidity = 'N/A';
+                            feature.properties.rainfall = 'N/A';
+                            feature.properties.population_density = 'N/A';
+                        }
+                    });
+
+                    const geoLayer = L.geoJson(geojsonData, {
+                        style: feature => ({
+                            fillColor: getRiskColor(feature.properties.risk_level),
+                            weight: 2,
+                            color: 'white',
+                            opacity: 1,
+                            dashArray: '3',
+                            fillOpacity: 0.7
+                        }),
+                        onEachFeature: (feature, layer) => {
+                            const name = feature.properties.name || 'Tanpa Nama';
+                            const risk = feature.properties.risk_level;
+                            const temp = feature.properties.temp;
+                            const humidity = feature.properties.humidity;
+                            const rainfall = feature.properties.rainfall;
+                            const population_density = feature.properties.population_density;
+
+                            layer.bindPopup(`
+                                <strong>${name}</strong><br>
+                                Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
+                                Suhu: ${temp}°C<br>
+                                Kelembaban: ${humidity}%<br>
+                                Curah Hujan: ${rainfall}mm<br>
+                                Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
+                            `);
+                        }
+                    });
+
+                    geoLayer.addTo(choroplethLayer);
+                })
+                .catch(error => console.error("Gagal memuat GeoJSON:", error));
         }
         
         // Membuat markers untuk pasien dari database
@@ -621,7 +658,7 @@ if ($_POST) {
             patientsLayer.clearLayers();
             
             patients.forEach(function(patient, index) {
-                var marker = L.marker([parseFloat(patient.lat), parseFloat(patient.lng)], {
+                var marker = L.marker([parseFloat(patient.latitude), parseFloat(patient.longitude)], {
                     icon: L.divIcon({
                         className: 'patient-marker',
                         html: '<div style="background-color: #007bff; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">' + (index + 1) + '</div>',
@@ -634,11 +671,11 @@ if ($_POST) {
                     <div style="min-width: 200px;">
                         <h6><i class="fas fa-user-injured"></i> ${patient.nama}</h6>
                         <hr style="margin: 10px 0;">
-                        <p style="margin: 5px 0;"><strong>JK:</strong> ${patient.jk}</p>
+                        <p style="margin: 5px 0;"><strong>JK:</strong> ${patient.jenis_kelamin}</p>
                         <p style="margin: 5px 0;"><strong>Umur:</strong> ${patient.umur} tahun</p>
                         <p style="margin: 5px 0;"><strong>Alamat:</strong> ${patient.alamat}</p>
-                        <p style="margin: 5px 0;"><strong>Tanggal:</strong> ${new Date(patient.tanggal).toLocaleDateString('id-ID')}</p>
-                        <p style="margin: 5px 0;"><strong>Koordinat:</strong> ${parseFloat(patient.lat).toFixed(4)}, ${parseFloat(patient.lng).toFixed(4)}</p>
+                        <p style="margin: 5px 0;"><strong>Tanggal:</strong> ${new Date(patient.tanggal_lapor).toLocaleDateString('id-ID')}</p>
+                        <p style="margin: 5px 0;"><strong>Koordinat:</strong> ${parseFloat(patient.latitude).toFixed(4)}, ${parseFloat(patient.longitude).toFixed(4)}</p>
                     </div>
                 `);
             });
@@ -673,11 +710,11 @@ if ($_POST) {
         function editPatient(patient) {
             document.getElementById('edit_id').value = patient.id;
             document.getElementById('edit_nama').value = patient.nama;
-            document.getElementById('edit_jk').value = patient.jk;
+            document.getElementById('edit_jk').value = patient.jenis_kelamin; // Changed to jenis_kelamin
             document.getElementById('edit_umur').value = patient.umur;
             document.getElementById('edit_alamat').value = patient.alamat;
-            document.getElementById('edit_lat').value = patient.lat;
-            document.getElementById('edit_lng').value = patient.lng;
+            document.getElementById('edit_lat').value = patient.latitude; // Changed to latitude
+            document.getElementById('edit_lng').value = patient.longitude; // Changed to longitude
             
             var modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
             modal.show();
