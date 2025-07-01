@@ -26,17 +26,17 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
         $risk_score += 1;
     }
     
-    if ($humidity > 70) {
+    if ($humidity >= 70 && $temp <= 90) {
         $risk_score += 3;
-    } elseif ($humidity > 60) {
+    } elseif ($humidity >= 60  && $temp <= 95)  {
         $risk_score += 2;
     } else {
         $risk_score += 1;
     }
     
-    if ($rainfall > 100) {
+    if ($rainfall >= 100 && $temp <= 300) {
         $risk_score += 3;
-    } elseif ($rainfall > 50) {
+    } elseif ($rainfall > 50 && $temp <= 350) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
