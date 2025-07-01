@@ -1,5 +1,12 @@
-<?php include 'db.php'; 
+<?php 
 
+include 'db.php'; 
+
+// Periksa apakah user sudah login dan memiliki role 'admin'
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header("Location: login.php"); // Jika tidak, arahkan ke halaman login
+    exit;
+}
 
 // Konfigurasi API Keys
 $openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302';
@@ -366,6 +373,7 @@ if ($patients_result->num_rows > 0) {
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
             <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
+            <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
         </div>
         
         <div class="table-container">
@@ -490,6 +498,7 @@ if ($patients_result->num_rows > 0) {
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
     <script>
         // Inisialisasi peta

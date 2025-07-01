@@ -1,4 +1,12 @@
 <?php
+
+
+// Arahkan ke login jika belum login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
 // Konfigurasi API Keys
 $openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302'; // Daftar di openweathermap.org
 $mapbox_token = 'YOUR_MAPBOX_TOKEN'; // Daftar di mapbox.com - Pastikan ini juga diisi jika ingin menggunakan Mapbox tiles
@@ -16,7 +24,6 @@ function getWeatherData($lat, $lon, $api_key) {
 
 
 // Fungsi untuk menghitung tingkat kerawanan
-/ Fungsi untuk menghitung tingkat kerawanan
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
     
@@ -116,6 +123,8 @@ $regions = [
 ];
 
 // Data contoh pasien di Pontianak
+// Note: This needs to be fetched from the database for consistency if db.php is included
+// For now, retaining static data as per the original file, but a database fetch would be ideal.
 $patients = [
     ['lat' => -0.0263, 'lon' => 109.3425, 'name' => 'Pasien A', 'date' => '2024-06-01'],
     ['lat' => -0.0505, 'lon' => 109.3176, 'name' => 'Pasien B', 'date' => '2024-06-02'],
@@ -332,6 +341,7 @@ foreach ($regions as &$region) {
         <div class="header">
             <h1><i class="fas fa-bug"></i> Monitoring Kerawanan Demam Berdarah</h1>
             <p>Sistem Pemantauan Real-time Kota Pontianak</p>
+            <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
         </div>
         
         <div class="city-info">
