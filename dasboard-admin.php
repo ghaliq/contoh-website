@@ -351,6 +351,51 @@ if ($_POST) {
             border-color: #2c5530;
             box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
         }
+
+        /* Styles for scrollable stats */
+        .scrollable-stats {
+            max-height: 320px; /* Adjust as needed */
+            overflow-y: auto;
+            padding: 15px;
+            background: #ffffff;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px; /* Added margin to separate from control panel */
+        }
+        .scrollable-stats::-webkit-scrollbar {
+            width: 8px;
+        }
+        .scrollable-stats::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .scrollable-stats::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        .scrollable-stats::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+        .scrollable-stats .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .scrollable-stats .stats-card:hover {
+            transform: translateX(3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        .scrollable-stats .stats-card:last-child {
+            margin-bottom: 0;
+        }
+        .stats-card.tinggi { border-left-color: #dc3545; }
+        .stats-card.sedang { border-left-color: #ffc107; }
+        .stats-card.rendah { border-left-color: #28a745; }
     </style>
 </head>
 <body>
@@ -450,6 +495,32 @@ if ($_POST) {
                         <i class="fas fa-crosshairs"></i> Fokus Pontianak
                     </button>
                 </div>
+
+                <div class="scrollable-stats" id="statsContainer">
+                    <h5><strong>Statistik Risiko Wilayah</strong></h5>
+                    <?php
+                    $seen = [];
+                    foreach ($regions as $region):
+                        // Ensure unique regions if there are duplicates from PHP array structure
+                        if (in_array(strtolower($region['name']), $seen)) continue;
+                        $seen[] = strtolower($region['name']);
+                    ?>
+                    <div class="stats-card <?php echo strtolower($region['risk_level']); ?>">
+                        <h6><strong><?php echo $region['name']; ?></strong></h6>
+                        <p><small>
+                            <strong>Suhu:</strong> <?php echo $region['temp']; ?>°C<br>
+                            <strong>Kelembaban:</strong> <?php echo $region['humidity']; ?>%<br>
+                            <strong>Curah Hujan:</strong> <?php echo $region['rainfall']; ?>mm<br>
+                            <strong>Kepadatan:</strong> <?php echo number_format($region['population_density']); ?> jiwa/km²<br>
+                            <strong>Tingkat Risiko:</strong>
+                            <span class="badge bg-<?php echo $region['risk_level'] == 'Tinggi' ? 'danger' : ($region['risk_level'] == 'Sedang' ? 'warning' : 'success'); ?>">
+                                <?php echo $region['risk_level']; ?>
+                            </span>
+                        </small></p>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
             </div>
         </div>
     </div>
@@ -710,11 +781,11 @@ if ($_POST) {
         function editPatient(patient) {
             document.getElementById('edit_id').value = patient.id;
             document.getElementById('edit_nama').value = patient.nama;
-            document.getElementById('edit_jk').value = patient.jenis_kelamin; // Changed to jenis_kelamin
+            document.getElementById('edit_jk').value = patient.jenis_kelamin;
             document.getElementById('edit_umur').value = patient.umur;
             document.getElementById('edit_alamat').value = patient.alamat;
-            document.getElementById('edit_lat').value = patient.latitude; // Changed to latitude
-            document.getElementById('edit_lng').value = patient.longitude; // Changed to longitude
+            document.getElementById('edit_lat').value = patient.latitude;
+            document.getElementById('edit_lng').value = patient.longitude;
             
             var modal = new bootstrap.Modal(document.getElementById('editPatientModal'));
             modal.show();
