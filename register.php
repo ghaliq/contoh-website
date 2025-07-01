@@ -1,5 +1,4 @@
 <?php
-
 include 'db.php'; // Memasukkan koneksi database
 
 $message = ''; // Variabel untuk menyimpan pesan
@@ -7,7 +6,7 @@ $message = ''; // Variabel untuk menyimpan pesan
 if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
     $username = $_POST['username']; // Ambil username
     $password = $_POST['password']; // Ambil password
-    $role = $_POST['role'] ?? 'user'; // Ambil role, defaultnya 'user'
+    $role = 'user'; // Atur role secara default menjadi 'user'
 
     // Hash password sebelum menyimpannya ke database untuk keamanan
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -121,13 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
             </div>
             <div class="mb-3">
                 <input type="password" name="password" class="form-control" placeholder="Password" required>
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label float-start">Register sebagai:</label>
-                <select name="role" id="role" class="form-select">
-                    <option value="user">User Biasa</option>
-                    <option value="admin">Admin</option>
-                </select>
             </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register</button>
         </form>
