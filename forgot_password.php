@@ -1,41 +1,48 @@
 <?php
-// session_start(); // Baris ini dihapus karena session_start() sudah ada di db.php
 include 'db.php'; // Memasukkan koneksi database dan memulai sesi
 
-$message = ''; // Variabel untuk menyimpan pesan
+$message = '';
+$error_message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
-    $username = $_POST['username']; // Ini akan menjadi nama tampilan
-    $email = $_POST['email']; // Email untuk login
-    $password = $_POST['password']; // Password
-    $role = 'user'; // Atur role secara default menjadi 'user' untuk setiap pendaftaran baru
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = $_POST['email'];
 
-    // Hash password sebelum menyimpannya ke database untuk keamanan
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    // Cari user berdasarkan email
+    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Cek apakah email atau username sudah ada di database
-    $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
-    $check_stmt->bind_param("ss", $email, $username);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $user_id = $user['id'];
 
-    if ($check_result->num_rows > 0) { // Jika email atau username sudah terdaftar
-        $existing_user = $check_result->fetch_assoc();
-        if ($existing_user['email'] === $email) {
-            $message = "Email sudah terdaftar. Silakan gunakan email lain.";
+        // Hasilkan token unik dan atur kadaluarsa (misal 1 jam dari sekarang)
+        $token = bin2hex(random_bytes(32)); // Token acak 64 karakter
+        $expires = date("Y-m-d H:i:s", strtotime('+1 hour'));
+
+        // Simpan token dan kadaluarsa di database
+        $update_stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
+        $update_stmt->bind_param("ssi", $token, $expires, $user_id);
+        
+        if ($update_stmt->execute()) {
+            // --- SIMULASI PENGIRIMAN EMAIL ---
+            // Di sini adalah bagian di mana Anda akan mengirim email ke pengguna
+            // yang berisi tautan untuk mereset password mereka.
+            // Contoh tautan reset: http://localhost/nama_folder_proyek/reset_password.php?token=<?php echo $token; ?>
+            //
+            // Karena saya tidak bisa mengakses server email, ini adalah simulasinya:
+            $reset_link = "http://localhost/nama_folder_proyek/reset_password.php?token=" . $token;
+            $message = "Tautan reset password telah 'dikirim' ke email Anda. " .
+                       "Mohon cek inbox Anda (atau folder spam).<br>" .
+                       "Untuk tujuan demonstrasi, klik tautan ini: <a href='" . htmlspecialchars($reset_link) . "'>" . htmlspecialchars($reset_link) . "</a>";
+            // --- AKHIR SIMULASI ---
+
         } else {
-            $message = "Nama pengguna sudah terdaftar. Silakan gunakan nama lain.";
+            $error_message = "Terjadi kesalahan saat membuat token reset password.";
         }
     } else {
-        // Siapkan dan jalankan query untuk memasukkan user baru
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $username, $email, $hashed_password, $role);
-
-        if ($stmt->execute()) { // Jika berhasil disimpan
-            $message = "Registrasi berhasil! Silakan <a href='login.php'>Login</a>.";
-        } else { // Jika terjadi error
-            $message = "Terjadi kesalahan saat registrasi: " . $conn->error;
-        }
+        $error_message = "Email tidak ditemukan.";
     }
 }
 ?>
@@ -44,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Lupa Password</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -58,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
             margin: 0;
             color: #333;
         }
-        .register-container {
+        .container-fluid {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 15px;
             padding: 40px;
@@ -72,12 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
             color: #2c5530;
             font-weight: bold;
         }
-        .form-control, .form-select {
+        .form-control {
             border-radius: 8px;
             border-color: #ced4da;
             padding: 12px;
         }
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: #1a7037;
             box-shadow: 0 0 0 0.25rem rgba(26, 112, 55, 0.25);
         }
@@ -114,26 +121,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
     </style>
 </head>
 <body>
-    <div class="register-container">
-        <h3><i class="fas fa-user-plus"></i> Register</h3>
+    <div class="container-fluid">
+        <h3><i class="fas fa-lock"></i> Lupa Password</h3>
         <?php if (!empty($message)): ?>
-            <div class="alert <?php echo strpos($message, 'berhasil') !== false ? 'alert-success' : 'alert-danger'; ?>" role="alert">
+            <div class="alert alert-success" role="alert">
                 <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger" role="alert">
+                <?php echo $error_message; ?>
             </div>
         <?php endif; ?>
         <form method="post">
             <div class="mb-3">
-                <input type="text" name="username" class="form-control" placeholder="Nama Lengkap" required>
+                <input type="email" name="email" class="form-control" placeholder="Masukkan Email Anda" required>
             </div>
-            <div class="mb-3">
-                <input type="email" name="email" class="form-control" placeholder="Email" required>
-            </div>
-            <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="Password" required>
-            </div>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Kirim Link Reset</button>
         </form>
-        <p>Sudah punya akun? <a href="login.php">Login di sini</a></p>
+        <p><a href="login.php">Kembali ke Login</a></p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>

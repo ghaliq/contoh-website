@@ -349,7 +349,9 @@ if ($patients_result->num_rows > 0) {
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
             <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
-            <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
+            <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | 
+            <a href="profile.php" class="btn btn-sm btn-info"><i class="fas fa-user-edit"></i> Edit Profil</a> | 
+            <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
         </div>
         
         <div class="table-container">

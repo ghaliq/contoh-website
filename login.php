@@ -5,21 +5,22 @@ include 'db.php'; // Memasukkan koneksi database dan memulai sesi
 $error_message = ''; // Variabel untuk menyimpan pesan error
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode POST)
-    $username = $_POST['username']; // Ambil username dari input form
+    $email = $_POST['email']; // Ambil email dari input form (bukan lagi username)
     $password = $_POST['password']; // Ambil password dari input form
 
-    // Siapkan dan jalankan query untuk mengambil data user berdasarkan username
-    $stmt = $conn->prepare("SELECT id, username, password, role FROM users WHERE username = ?");
-    $stmt->bind_param("s", $username); // Bind parameter username
+    // Siapkan dan jalankan query untuk mengambil data user berdasarkan email
+    $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email); // Bind parameter email
     $stmt->execute(); // Jalankan query
     $result = $stmt->get_result(); // Dapatkan hasilnya
 
-    if ($result->num_rows > 0) { // Jika ada user dengan username tersebut
+    if ($result->num_rows > 0) { // Jika ada user dengan email tersebut
         $user = $result->fetch_assoc(); // Ambil data user
         if (password_verify($password, $user['password'])) { // Verifikasi password yang dimasukkan dengan hash di database
             // Jika password cocok, set variabel sesi
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
+            $_SESSION['username'] = $user['username']; // Username sekarang berperan sebagai nama tampilan
+            $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
 
             // Arahkan pengguna berdasarkan perannya
@@ -30,10 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             }
             exit; // Hentikan eksekusi script
         } else {
-            $error_message = "Username atau password salah."; // Pesan error jika password tidak cocok
+            $error_message = "Email atau password salah."; // Pesan error jika password tidak cocok
         }
     } else {
-        $error_message = "Username atau password salah."; // Pesan error jika username tidak ditemukan
+        $error_message = "Email atau password salah."; // Pesan error jika email tidak ditemukan
     }
 }
 ?>
@@ -121,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
         <?php endif; ?>
         <form method="post">
             <div class="mb-3">
-                <input type="text" name="username" class="form-control" placeholder="Username" required>
+                <input type="email" name="email" class="form-control" placeholder="Email" required>
             </div>
             <div class="mb-3">
                 <input type="password" name="password" class="form-control" placeholder="Password" required>
@@ -129,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             <button type="submit" class="btn btn-primary"><i class="fas fa-lock"></i> Login</button>
         </form>
         <p>Belum punya akun? <a href="register.php">Daftar di sini</a></p>
+        <p><a href="forgot_password.php">Lupa Password?</a></p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
