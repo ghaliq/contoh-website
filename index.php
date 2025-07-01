@@ -1,5 +1,6 @@
 <?php
-
+// session_start(); // Baris ini dihapus karena session_start() sudah ada di db.php
+include 'db.php'; // Memasukkan koneksi database dan memulai sesi
 
 // Arahkan ke login jika belum login
 if (!isset($_SESSION['user_id'])) {
@@ -21,7 +22,6 @@ function getWeatherData($lat, $lon, $api_key) {
     }
     return json_decode($response, true);
 }
-
 
 // Fungsi untuk menghitung tingkat kerawanan
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
@@ -123,8 +123,8 @@ $regions = [
 ];
 
 // Data contoh pasien di Pontianak
-// Note: This needs to be fetched from the database for consistency if db.php is included
-// For now, retaining static data as per the original file, but a database fetch would be ideal.
+// Note: Ini adalah data statis dari file asli. Jika Anda ingin data pasien diambil dari database,
+// Anda perlu menyertakan db.php dan melakukan query ke tabel 'pasien'.
 $patients = [
     ['lat' => -0.0263, 'lon' => 109.3425, 'name' => 'Pasien A', 'date' => '2024-06-01'],
     ['lat' => -0.0505, 'lon' => 109.3176, 'name' => 'Pasien B', 'date' => '2024-06-02'],
@@ -136,7 +136,6 @@ $patients = [
 
 // Mengambil data cuaca untuk setiap wilayah
 foreach ($regions as &$region) {
-    // Uncomment baris berikut setelah mendapatkan API key
     $weather = getWeatherData($region['lat'], $region['lon'], $openweather_api_key);
     
     // Cek apakah data cuaca berhasil diambil
@@ -465,7 +464,6 @@ foreach ($regions as &$region) {
                     geojsonData.features.forEach(feature => {
                         // Normalisasi nama dari GeoJSON untuk perbandingan (lowercase)
                         const geoName = (feature.properties.name || '').toLowerCase();
-                        // Cari data region yang sesuai dari PHP
                         const matchedRegion = regions.find(r => r.name.toLowerCase() === geoName);
 
                         // Tetapkan tingkat risiko dan properti lainnya ke fitur GeoJSON
