@@ -23,6 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             $_SESSION['email'] = $user['email'];
             $_SESSION['role'] = $user['role'];
 
+    // --- TAMBAHKAN KODE DEBUGGING DI SINI ---
+    echo "Nilai role yang ditemukan dari database: " . $user['role'] . "<br>";
+    echo "Nilai role yang disimpan di sesi: " . $_SESSION['role'] . "<br>";
+    // ----------------------------------------
+
             // Arahkan pengguna berdasarkan perannya
             if ($user['role'] === 'admin') {
                 header("Location: dasboard-admin.php"); // Redirect ke dashboard admin jika admin
