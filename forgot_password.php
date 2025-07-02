@@ -25,24 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $update_stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
         $update_stmt->bind_param("ssi", $token, $expires, $user_id);
         
-        if ($update_stmt->execute()) {
-            // --- SIMULASI PENGIRIMAN EMAIL ---
-            // Di sini adalah bagian di mana Anda akan mengirim email ke pengguna
-            // yang berisi tautan untuk mereset password mereka.
-            // Contoh tautan reset: http://localhost/nama_folder_proyek/reset_password.php?token=<?php echo $token; ?>
-            //
-            // Karena saya tidak bisa mengakses server email, ini adalah simulasinya:
-            $reset_link = "http://localhost/nama_folder_proyek/reset_password.php?token=" . $token;
-            $message = "Tautan reset password telah 'dikirim' ke email Anda. " .
-                       "Mohon cek inbox Anda (atau folder spam).<br>" .
-                       "Untuk tujuan demonstrasi, klik tautan ini: <a href='" . htmlspecialchars($reset_link) . "'>" . htmlspecialchars($reset_link) . "</a>";
-            // --- AKHIR SIMULASI ---
-
-        } else {
-            $error_message = "Terjadi kesalahan saat membuat token reset password.";
-        }
-    } else {
-        $error_message = "Email tidak ditemukan.";
     }
 }
 ?>
