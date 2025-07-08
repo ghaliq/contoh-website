@@ -54,14 +54,15 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
         $risk_score += 1; // Lowest risk contribution (below 50mm)
     }
     
-    // Faktor kepadatan penduduk (optimal 4000-8000 per km²)
-    if ($population_density >= 4000 && $population_density <= 8000) {
-        $risk_score += 3; // Highest risk contribution for optimal population density
-    } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) { // Above 8000 or between 2000 and 4000
-        $risk_score += 2; // Medium risk contribution
-    } else {
-        $risk_score += 1; // Lowest risk contribution (below 2000)
+    // Rentang kepadatan penduduk yang diobservasi di Kota Pontianak: 3.041 - 9.268 jiwa/km²
+    if ($population_density > 7500) {
+        $risk_score += 3; // Kontribusi risiko TERTINGGI (untuk kepadatan sangat tinggi)
+    } elseif ($population_density >= 4000 && $population_density <= 7500) {
+        $risk_score += 2; // Kontribusi risiko SEDANG (untuk kepadatan menengah)
+    } else { // $population_density < 4000
+        $risk_score += 1; // Kontribusi risiko RENDAH (untuk kepadatan rendah)
     }
+
     
     // Kategorisasi risiko
     if ($risk_score >= 10) return 'Tinggi';
@@ -85,19 +86,32 @@ $today = date("Y-m-d");
 foreach ($regions as &$region) {
     $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
     
+    // Inisialisasi curah hujan dari database sebagai nilai fallback
+    $current_rainfall = $region['rainfall_avg']; 
+
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
+        
+        // --- AWAL KODE TAMBAHAN/MODIFIKASI UNTUK CURAH HUJAN DARI API ---
+        // Cek jika data hujan per jam ('1h') tersedia dari API
+        if (isset($weather['rain']['1h'])) {
+            $current_rainfall = $weather['rain']['1h']; // Gunakan data API jika ada
+        } 
+        // --- AKHIR KODE TAMBAHAN/MODIFIKASI ---
+
     } else {
-        // Jika gagal, gunakan data simulasi
+        // Jika panggilan API gagal seluruhnya, gunakan data simulasi untuk suhu/kelembaban
+        // dan curah hujan akan tetap dari database (sesuai inisialisasi $current_rainfall di awal loop)
         $region['temp'] = rand(27, 33);
         $region['humidity'] = rand(75, 90);
     }
     
+    // Baris ini akan menggunakan nilai curah hujan yang sudah ditentukan ($current_rainfall)
     $region['risk_level'] = calculateRiskLevel(
         $region['temp'], 
         $region['humidity'], 
-        $region['rainfall_avg'], 
+        $current_rainfall, // GUNAKAN VARIABEL INI
         $region['population_density']
     );
 
@@ -451,7 +465,7 @@ $patients = [
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
                             feature.properties.humidity = matchedRegion.humidity;
-                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
+                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg; // Still using rainfall_avg for display in popup
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
                             feature.properties.risk_level = 'Tidak Ada Data';
@@ -476,7 +490,7 @@ $patients = [
                             const risk = feature.properties.risk_level;
                             const temp = feature.properties.temp;
                             const humidity = feature.properties.humidity;
-                            const rainfall_avg = feature.properties.rainfall_avg;
+                            const rainfall_avg_display = feature.properties.rainfall_avg; // Use this for display only
                             const population_density = feature.properties.population_density;
 
                             layer.bindPopup(`
@@ -484,7 +498,7 @@ $patients = [
                                 Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
                                 Suhu: ${temp}°C<br>
                                 Kelembaban: ${humidity}%<br>
-                                Curah Hujan: ${rainfall_avg}mm<br>
+                                Curah Hujan: ${rainfall_avg_display}mm<br> 
                                 Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
                             `);
                         }

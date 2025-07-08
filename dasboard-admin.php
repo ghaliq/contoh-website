@@ -82,20 +82,32 @@ $today = date("Y-m-d");
 foreach ($regions as &$region) {
     $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
     
+    // Inisialisasi curah hujan dari database sebagai nilai fallback
+    $current_rainfall = $region['rainfall_avg']; 
+
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
+        
+        // --- AWAL KODE TAMBAHAN/MODIFIKASI UNTUK CURAH HUJAN DARI API ---
+        // Cek jika data hujan per jam ('1h') tersedia dari API
+        if (isset($weather['rain']['1h'])) {
+            $current_rainfall = $weather['rain']['1h']; // Gunakan data API jika ada
+        } 
+        // --- AKHIR KODE TAMBAHAN/MODIFIKASI ---
     } else {
-        // Jika gagal, gunakan data simulasi
+        // Jika panggilan API gagal seluruhnya, gunakan data simulasi untuk suhu/kelembaban
+        // dan curah hujan akan tetap dari database (sesuai inisialisasi $current_rainfall di awal loop)
         $region['temp'] = rand(27, 33);
         $region['humidity'] = rand(75, 90);
     }
     
+    // Baris ini akan menggunakan nilai curah hujan yang sudah ditentukan ($current_rainfall)
     $region['risk_level'] = calculateRiskLevel(
         $region['temp'], 
         $region['humidity'], 
-        $region['rainfall_avg'], // Menggunakan rainfall_avg dari database
-        $region['population_density'] // Menggunakan population_density dari database
+        $current_rainfall, // GUNAKAN VARIABEL INI
+        $region['population_density']
     );
 
     // Simpan data harian ke database (hanya sekali per hari per kecamatan)
@@ -525,7 +537,7 @@ if ($patients_result->num_rows > 0) {
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
                             feature.properties.humidity = matchedRegion.humidity;
-                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
+                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg; // Still using rainfall_avg for display in popup
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
                             feature.properties.risk_level = 'Tidak Ada Data';
@@ -550,7 +562,7 @@ if ($patients_result->num_rows > 0) {
                             const risk = feature.properties.risk_level;
                             const temp = feature.properties.temp;
                             const humidity = feature.properties.humidity;
-                            const rainfall_avg = feature.properties.rainfall_avg;
+                            const rainfall_avg_display = feature.properties.rainfall_avg; // Use this for display only
                             const population_density = feature.properties.population_density;
 
                             layer.bindPopup(`
@@ -558,7 +570,7 @@ if ($patients_result->num_rows > 0) {
                                 Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
                                 Suhu: ${temp}°C<br>
                                 Kelembaban: ${humidity}%<br>
-                                Curah Hujan: ${rainfall_avg}mm<br>
+                                Curah Hujan: ${rainfall_avg_display}mm<br> 
                                 Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
                             `);
                         }
