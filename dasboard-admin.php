@@ -157,7 +157,7 @@ if ($patients_result->num_rows > 0) {
         }
         
         #sidebar {
-            width: 250px;
+            width: 280px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
             padding: 20px;
             color: white;
@@ -408,9 +408,6 @@ if ($patients_result->num_rows > 0) {
             transform: translateX(3px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
-        .scrollable-stats .stats-card:last-child {
-            margin-bottom: 0;
-        }
         .stats-card.tinggi { border-left-color: #D32F2F; }
         .stats-card.sedang { border-left-color: #FFB300; }
         .stats-card.rendah { border-left-color: #66BB6A; }
@@ -424,47 +421,8 @@ if ($patients_result->num_rows > 0) {
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
-            <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
-        </div>
-        <ul class="components">
-            <li>
-                <a href="#" class="sidebar-link active" data-target="dashboard-overview">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
-                </a>
-            </li>
-            <li>
-                <a href="#" class="sidebar-link" data-target="patient-data">
-                    <i class="fas fa-users"></i> Data Pasien
-                </a>
-            </li>
-            <li>
-                <a href="#" class="sidebar-link" data-target="dashboard-overview">
-                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
-                </a>
-            </li>
-            <li>
-                <a href="statistics.php" class="sidebar-link">
-                    <i class="fas fa-chart-bar"></i> Statistik Historis
-                </a>
-            </li>
-            <li>
-                <a href="profile.php" class="sidebar-link">
-                    <i class="fas fa-user-edit"></i> Kelola Profil
-                </a>
-            </li>
-        </ul>
-        <ul class="components">
-            <li>
-                <a href="logout.php" class="sidebar-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </div>
-
+    <?php $currentPage = 'dashboard'; include 'sidebar.php'; ?>
+    
     <div id="content">
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>

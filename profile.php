@@ -84,8 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-$currentPage = 'profile';
-include 'sidebar.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -147,6 +145,8 @@ include 'sidebar.php';
     </style>
 </head>
 <body>
+    <?php $currentPage = 'profile'; include 'sidebar.php'; ?>
+
     <div class="container-fluid">
         <h3><i class="fas fa-user-edit"></i> Edit Profil Anda</h3>
         <?php if (!empty($message)): ?>

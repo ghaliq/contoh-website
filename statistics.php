@@ -127,7 +127,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
         }
         
         #sidebar {
-            width: 250px;
+            width: 280px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
             padding: 20px;
             color: white;
