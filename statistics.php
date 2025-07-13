@@ -101,7 +101,6 @@ foreach ($kecamatan_names as $name) {
     ];
 }
 
-
 // Konversi data PHP ke JSON untuk JavaScript
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
@@ -122,15 +121,83 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
         }
-        .container-fluid {
+        
+        #sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
+            padding: 20px;
+            color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        #sidebar .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #sidebar .sidebar-header h2 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        #sidebar ul.components {
+            padding: 0;
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        #sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        #sidebar ul li a {
+            padding: 10px 15px;
+            display: block;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        #sidebar ul li a:hover,
+        #sidebar ul li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            overflow-y: auto;
+        }
+        
+        .main-content-area {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
         }
+        
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -193,44 +260,89 @@ $json_kecamatan_names = json_encode($kecamatan_names);
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="header">
-            <h1><i class="fas fa-chart-bar"></i> Statistik Kerawanan DBD Historis</h1>
-            <p>Data Suhu, Kelembaban, dan Tingkat Risiko per Kecamatan (<?php echo $data_limit_days; ?> Hari Terakhir)</p>
-            <p><a href="<?php echo ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php'; ?>" class="btn btn-sm btn-light"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a> | Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+            <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
         </div>
-
-        <?php if (empty($all_dates) || empty($kecamatan_names)): ?>
-            <div class="alert alert-info text-center" role="alert">
-                Belum ada data historis yang tersedia untuk ditampilkan.
-            </div>
-        <?php else: ?>
-            <div class="row">
-                <?php foreach ($kecamatan_names as $kecamatan): ?>
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <h4 class="chart-title">Risiko DBD: <?php echo htmlspecialchars($kecamatan); ?></h4>
-                        <canvas id="riskChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
-                        <div class="chart-legend">
-                            <ul>
-                                <li><span style="background-color:#dc3545;"></span>Tinggi (3)</li>
-                                <li><span style="background-color:#ffc107;"></span>Sedang (2)</li>
-                                <li><span style="background-color:#28a745;"></span>Rendah (1)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="chart-container">
-                        <h4 class="chart-title">Suhu & Kelembaban: <?php echo htmlspecialchars($kecamatan); ?></h4>
-                        <canvas id="tempHumidChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+        <ul class="components">
+            <li>
+                <a href="dasboard-admin.php" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+                </a>
+            </li>
+            <li>
+                <a href="dasboard-admin.php#patient-data" class="sidebar-link">
+                    <i class="fas fa-users"></i> Data Pasien
+                </a>
+            </li>
+            <li>
+                <a href="dasboard-admin.php#risk-map" class="sidebar-link">
+                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
+                </a>
+            </li>
+            <li>
+                <a href="statistics.php" class="sidebar-link active">
+                    <i class="fas fa-chart-bar"></i> Statistik Historis
+                </a>
+            </li>
+            <li>
+                <a href="profile.php" class="sidebar-link">
+                    <i class="fas fa-user-edit"></i> Kelola Profil
+                </a>
+            </li>
+        </ul>
+        <ul class="components">
+            <li>
+                <a href="logout.php" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
     </div>
 
+    <div id="content">
+        <div class="main-content-area">
+            <div class="container-fluid">
+                <div class="header">
+                    <h1><i class="fas fa-chart-bar"></i> Statistik Kerawanan DBD Historis</h1>
+                    <p>Data Suhu, Kelembaban, dan Tingkat Risiko per Kecamatan (<?php echo $data_limit_days; ?> Hari Terakhir)</p>
+                    <p><a href="<?php echo ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php'; ?>" class="btn btn-sm btn-light"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a> | Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
+                </div>
+
+                <?php if (empty($all_dates) || empty($kecamatan_names)): ?>
+                    <div class="alert alert-info text-center" role="alert">
+                        Belum ada data historis yang tersedia untuk ditampilkan.
+                    </div>
+                <?php else: ?>
+                    <div class="row">
+                        <?php foreach ($kecamatan_names as $kecamatan): ?>
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <h4 class="chart-title">Risiko DBD: <?php echo htmlspecialchars($kecamatan); ?></h4>
+                                <canvas id="riskChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
+                                <div class="chart-legend">
+                                    <ul>
+                                        <li><span style="background-color:#dc3545;"></span>Tinggi (3)</li>
+                                        <li><span style="background-color:#ffc107;"></span>Sedang (2)</li>
+                                        <li><span style="background-color:#28a745;"></span>Rendah (1)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <h4 class="chart-title">Suhu & Kelembaban: <?php echo htmlspecialchars($kecamatan); ?></h4>
+                                <canvas id="tempHumidChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
