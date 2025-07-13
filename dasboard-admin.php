@@ -1,4 +1,4 @@
-<?php
+<?php 
 include 'db.php'; 
 
 // Check if user is logged in and is admin
@@ -157,7 +157,7 @@ if ($patients_result->num_rows > 0) {
         }
         
         #sidebar {
-            width: 250px; /* Lebar diperbaiki menjadi 250px */
+            width: 250px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
             padding: 20px;
             color: white;
@@ -248,14 +248,6 @@ if ($patients_result->num_rows > 0) {
             margin: 10px 0 0 0;
             font-size: 1.1rem;
             opacity: 0.9;
-        }
-        
-        .table-container {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         
         .table-header {
@@ -395,7 +387,7 @@ if ($patients_result->num_rows > 0) {
         .scrollable-stats::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
-        .scrollable-stats .stats-card {
+        .stats-card {
             background: white;
             border-radius: 10px;
             padding: 20px;
@@ -404,7 +396,7 @@ if ($patients_result->num_rows > 0) {
             border-left: 5px solid;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .scrollable-stats .stats-card:hover {
+        .stats-card:hover {
             transform: translateX(3px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
@@ -520,52 +512,54 @@ if ($patients_result->num_rows > 0) {
         </div>
 
         <div id="patient-data" class="section-content main-content-area">
-            <div class="table-container">
-                <div class="table-header">
-                    <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
-                    <a href="add.php" class="btn btn-add">
-                        <i class="fas fa-plus"></i> Tambah Pasien
-                    </a>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Nama</th>
-                                <th>JK</th>
-                                <th>Umur</th>
-                                <th>Alamat</th>
-                                <th>Lat</th>
-                                <th>Lng</th>
-                                <th>Tanggal</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $no = 1; foreach($patients as $patient): ?>
-                            <tr>
-                                <td><?php echo $no++; ?></td>
-                                <td><?php echo htmlspecialchars($patient['nama']); ?></td>
-                                <td><?php echo $patient['jenis_kelamin']; ?></td>
-                                <td><?php echo $patient['umur']; ?></td>
-                                <td><?php echo htmlspecialchars($patient['alamat']); ?></td>
-                                <td><?php echo $patient['latitude']; ?></td>
-                                <td><?php echo $patient['longitude']; ?></td>
-                                <td><?php echo date('d/m/Y', strtotime($patient['tanggal_lapor'])); ?></td>
-                                <td>
-                                    <a href="edit.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-warning me-1">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="delete.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?');">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-header">
+                        <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
+                        <a href="add.php" class="btn btn-add">
+                            <i class="fas fa-plus"></i> Tambah Pasien
+                        </a>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama</th>
+                                    <th>JK</th>
+                                    <th>Umur</th>
+                                    <th>Alamat</th>
+                                    <th>Lat</th>
+                                    <th>Lng</th>
+                                    <th>Tanggal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $no = 1; foreach($patients as $patient): ?>
+                                <tr>
+                                    <td><?php echo $no++; ?></td>
+                                    <td><?php echo htmlspecialchars($patient['nama']); ?></td>
+                                    <td><?php echo $patient['jenis_kelamin']; ?></td>
+                                    <td><?php echo $patient['umur']; ?></td>
+                                    <td><?php echo htmlspecialchars($patient['alamat']); ?></td>
+                                    <td><?php echo $patient['latitude']; ?></td>
+                                    <td><?php echo $patient['longitude']; ?></td>
+                                    <td><?php echo date('d/m/Y', strtotime($patient['tanggal_lapor'])); ?></td>
+                                    <td>
+                                        <a href="edit.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-warning me-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?');">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
