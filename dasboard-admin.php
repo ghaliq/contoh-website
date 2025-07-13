@@ -421,8 +421,42 @@ if ($patients_result->num_rows > 0) {
     </style>
 </head>
 <body>
-    <?php $currentPage = 'dashboard'; include 'sidebar.php'; ?>
-    
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+            <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
+        </div>
+        <ul class="components">
+            <li>
+                <a href="#" class="sidebar-link active" data-target="dashboard-overview">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+                </a>
+            </li>
+            <li>
+                <a href="dasboard-admin.php#patient-data" class="sidebar-link" data-target="patient-data">
+                    <i class="fas fa-users"></i> Data Pasien
+                </a>
+            </li>
+            <li>
+                <a href="statistics.php" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i> Statistik Historis
+                </a>
+            </li>
+            <li>
+                <a href="profile.php" class="sidebar-link">
+                    <i class="fas fa-user-edit"></i> Kelola Profil
+                </a>
+            </li>
+        </ul>
+        <ul class="components">
+            <li>
+                <a href="logout.php" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
     <div id="content">
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
