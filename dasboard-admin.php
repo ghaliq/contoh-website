@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Konfigurasi API Keys
-$openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302';
+$openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302'; // Daftar di openweathermap.org
 
 // Fungsi untuk mengambil data cuaca
 function getWeatherData($lat, $lon, $api_key) {
@@ -89,12 +89,10 @@ foreach ($regions as &$region) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
         
-        // --- AWAL KODE TAMBAHAN/MODIFIKASI UNTUK CURAH HUJAN DARI API ---
         // Cek jika data hujan per jam ('1h') tersedia dari API
         if (isset($weather['rain']['1h'])) {
             $current_rainfall = $weather['rain']['1h']; // Gunakan data API jika ada
         } 
-        // --- AKHIR KODE TAMBAHAN/MODIFIKASI ---
     } else {
         // Jika panggilan API gagal seluruhnya, gunakan data simulasi untuk suhu/kelembaban
         // dan curah hujan akan tetap dari database (sesuai inisialisasi $current_rainfall di awal loop)
@@ -132,7 +130,7 @@ foreach ($regions as &$region) {
     }
 }
 
-// Mengambil data pasien dari database (ini tetap sama seperti sebelumnya)
+// Mengambil data pasien dari database
 $patients_query = "SELECT * FROM pasien ORDER BY id DESC";
 $patients_result = $conn->query($patients_query);
 $patients = [];
@@ -158,16 +156,84 @@ if ($patients_result->num_rows > 0) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            min-height: 100vh;
+            display: flex; /* Use flexbox for overall layout */
         }
         
-        .container-fluid {
+        #sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
+            padding: 20px;
+            color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Push logout to bottom */
+            position: sticky;
+            top: 0;
+            height: 100vh; /* Make sidebar take full height */
+            overflow-y: auto; /* Enable scrolling if content overflows */
+        }
+
+        #sidebar .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #sidebar .sidebar-header h2 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        #sidebar ul.components {
+            padding: 0;
+            list-style: none;
+            flex-grow: 1; /* Allow navigation to take available space */
+        }
+
+        #sidebar ul li {
+            margin-bottom: 10px;
+        }
+
+        #sidebar ul li a {
+            padding: 10px 15px;
+            display: block;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        #sidebar ul li a:hover,
+        #sidebar ul li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        #sidebar ul li a i {
+            margin-right: 10px;
+        }
+
+        #content {
+            flex-grow: 1; /* Allow content to take remaining space */
+            padding: 20px;
+            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            overflow-y: auto; /* Enable scrolling for main content */
+        }
+        
+        .main-content-area {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -354,134 +420,204 @@ if ($patients_result->num_rows > 0) {
         .stats-card.tinggi { border-left-color: #D32F2F; } /* Warna baru untuk Tinggi */
         .stats-card.sedang { border-left-color: #FFB300; } /* Warna baru untuk Sedang */
         .stats-card.rendah { border-left-color: #66BB6A; } /* Warna baru untuk Rendah */
+
+        .section-content {
+            display: none; /* Hidden by default */
+        }
+        .section-content.active {
+            display: block; /* Shown when active */
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+            <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
+        </div>
+        <ul class="components">
+            <li>
+                <a href="#" class="sidebar-link active" data-target="dashboard-overview">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-target="patient-data">
+                    <i class="fas fa-users"></i> Data Pasien
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" data-target="risk-map">
+                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
+                </a>
+            </li>
+            <li>
+                <a href="statistics.php" class="sidebar-link">
+                    <i class="fas fa-chart-bar"></i> Statistik Historis
+                </a>
+            </li>
+            <li>
+                <a href="profile.php" class="sidebar-link">
+                    <i class="fas fa-user-edit"></i> Kelola Profil
+                </a>
+            </li>
+        </ul>
+        <ul class="components">
+            <li>
+                <a href="logout.php" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="content">
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
             <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
-            <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | 
-            <a href="profile.php" class="btn btn-sm btn-info"><i class="fas fa-user-edit"></i> Edit Profil</a> | 
-            <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
         </div>
-        
-        <div class="table-container">
-            <div class="table-header">
-                <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
-                <a href="add.php" class="btn btn-add">
-                    <i class="fas fa-plus"></i> Tambah Pasien
-                </a>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>JK</th>
-                            <th>Umur</th>
-                            <th>Alamat</th>
-                            <th>Lat</th>
-                            <th>Lng</th>
-                            <th>Tanggal</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $no = 1; foreach($patients as $patient): ?>
-                        <tr>
-                            <td><?php echo $no++; ?></td>
-                            <td><?php echo htmlspecialchars($patient['nama']); ?></td>
-                            <td><?php echo $patient['jenis_kelamin']; ?></td>
-                            <td><?php echo $patient['umur']; ?></td>
-                            <td><?php echo htmlspecialchars($patient['alamat']); ?></td>
-                            <td><?php echo $patient['latitude']; ?></td>
-                            <td><?php echo $patient['longitude']; ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($patient['tanggal_lapor'])); ?></td>
-                            <td>
-                                <a href="edit.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-warning me-1">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="delete.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?');">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-lg-9">
-                <div id="map"></div>
-            </div>
-            
-            <div class="col-lg-3">
-                <div class="legend">
-                    <h5><strong>Legenda Tingkat Risiko</strong></h5>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background-color: #007bff;"></div>
-                        <span>Lokasi Pasien</span>
+
+        <div id="dashboard-overview" class="section-content active main-content-area">
+            <h4><i class="fas fa-info-circle"></i> Informasi Umum</h4>
+            <p>Selamat datang di dashboard admin. Di sini Anda dapat mengelola data pasien, memantau tingkat kerawanan DBD di setiap kecamatan, dan melihat statistik historis.</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="legend">
+                        <h5><strong>Legenda Tingkat Risiko</strong></h5>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #007bff;"></div>
+                            <span>Lokasi Pasien</span>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="legend">
-                    <h5><strong>Panel Kontrol</strong></h5>
-                    <button class="btn btn-custom btn-sm mb-2 w-100" onclick="togglePatients()">
-                        <i class="fas fa-user-injured"></i> Toggle Pasien
-                    </button>
-                    <button class="btn btn-custom btn-sm mb-2 w-100" onclick="toggleChoropleth()">
-                        <i class="fas fa-map"></i> Toggle Choropleth
-                    </button>
-                    <button class="btn btn-custom btn-sm mb-2 w-100" onclick="refreshData()">
-                        <i class="fas fa-sync-alt"></i> Refresh Data
-                    </button>
-                    <button class="btn btn-custom btn-sm mb-2 w-100" onclick="fitToPontianak()">
-                        <i class="fas fa-crosshairs"></i> Fokus Pontianak
-                    </button>
-                     <a href="statistics.php" class="btn btn-custom btn-sm mb-2 w-100">
-                        <i class="fas fa-chart-bar"></i> Lihat Statistik
+                <div class="col-md-6">
+                    <div class="scrollable-stats" id="statsContainer">
+                        <h5><strong>Statistik Risiko Wilayah Saat Ini</strong></h5>
+                        <?php
+                        $seen = [];
+                        foreach ($regions as $region):
+                            // Ensure unique regions if there are duplicates from PHP array structure
+                            if (in_array(strtolower($region['name']), $seen)) continue;
+                            $seen[] = strtolower($region['name']);
+                        ?>
+                        <div class="stats-card <?php echo strtolower($region['risk_level']); ?>">
+                            <h6><strong><?php echo $region['name']; ?></strong></h6>
+                            <p><small>
+                                <strong>Suhu:</strong> <?php echo $region['temp']; ?>°C<br>
+                                <strong>Kelembaban:</strong> <?php echo $region['humidity']; ?>%<br>
+                                <strong>Curah Hujan:</strong> <?php echo $region['rainfall_avg']; ?>mm<br>
+                                <strong>Kepadatan:</strong> <?php echo number_format($region['population_density']); ?> jiwa/km²<br>
+                                <strong>Tingkat Risiko:</strong>
+                                <span class="badge bg-<?php echo $region['risk_level'] == 'Tinggi' ? 'danger' : ($region['risk_level'] == 'Sedang' ? 'warning' : 'success'); ?>">
+                                    <?php echo $region['risk_level']; ?>
+                                </span>
+                            </small></p>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="patient-data" class="section-content main-content-area">
+            <div class="table-container">
+                <div class="table-header">
+                    <h4><i class="fas fa-users"></i> Data Pasien DBD</h4>
+                    <a href="add.php" class="btn btn-add">
+                        <i class="fas fa-plus"></i> Tambah Pasien
                     </a>
                 </div>
-
-                <div class="scrollable-stats" id="statsContainer">
-                    <h5><strong>Statistik Risiko Wilayah</strong></h5>
-                    <?php
-                    $seen = [];
-                    foreach ($regions as $region):
-                        // Ensure unique regions if there are duplicates from PHP array structure
-                        if (in_array(strtolower($region['name']), $seen)) continue;
-                        $seen[] = strtolower($region['name']);
-                    ?>
-                    <div class="stats-card <?php echo strtolower($region['risk_level']); ?>">
-                        <h6><strong><?php echo $region['name']; ?></strong></h6>
-                        <p><small>
-                            <strong>Suhu:</strong> <?php echo $region['temp']; ?>°C<br>
-                            <strong>Kelembaban:</strong> <?php echo $region['humidity']; ?>%<br>
-                            <strong>Curah Hujan:</strong> <?php echo $region['rainfall_avg']; ?>mm<br>
-                            <strong>Kepadatan:</strong> <?php echo number_format($region['population_density']); ?> jiwa/km²<br>
-                            <strong>Tingkat Risiko:</strong>
-                            <span class="badge bg-<?php echo $region['risk_level'] == 'Tinggi' ? 'danger' : ($region['risk_level'] == 'Sedang' ? 'warning' : 'success'); ?>">
-                                <?php echo $region['risk_level']; ?>
-                            </span>
-                        </small></p>
-                    </div>
-                    <?php endforeach; ?>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>JK</th>
+                                <th>Umur</th>
+                                <th>Alamat</th>
+                                <th>Lat</th>
+                                <th>Lng</th>
+                                <th>Tanggal</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $no = 1; foreach($patients as $patient): ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td><?php echo htmlspecialchars($patient['nama']); ?></td>
+                                <td><?php echo $patient['jenis_kelamin']; ?></td>
+                                <td><?php echo $patient['umur']; ?></td>
+                                <td><?php echo htmlspecialchars($patient['alamat']); ?></td>
+                                <td><?php echo $patient['latitude']; ?></td>
+                                <td><?php echo $patient['longitude']; ?></td>
+                                <td><?php echo date('d/m/Y', strtotime($patient['tanggal_lapor'])); ?></td>
+                                <td>
+                                    <a href="edit.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-warning me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="delete.php?id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+        </div>
 
+        <div id="risk-map" class="section-content main-content-area">
+            <h4><i class="fas fa-globe-asia"></i> Peta Risiko DBD</h4>
+            <div class="row">
+                <div class="col-lg-9">
+                    <div id="map"></div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="legend">
+                        <h5><strong>Legenda Tingkat Risiko</strong></h5>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #007bff;"></div>
+                            <span>Lokasi Pasien</span>
+                        </div>
+                    </div>
+                    <div class="legend">
+                        <h5><strong>Panel Kontrol Peta</strong></h5>
+                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="togglePatients()">
+                            <i class="fas fa-user-injured"></i> Toggle Pasien
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="toggleChoropleth()">
+                            <i class="fas fa-map"></i> Toggle Choropleth
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="fitToPontianak()">
+                            <i class="fas fa-crosshairs"></i> Fokus Pontianak
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -627,7 +763,8 @@ if ($patients_result->num_rows > 0) {
         }
         
         function refreshData() {
-            location.reload();
+            // This will reload the entire page, which is fine for now
+            location.reload(); 
         }
         
         function fitToPontianak() {
@@ -639,9 +776,50 @@ if ($patients_result->num_rows > 0) {
         createPatientMarkers();
         
         // Auto refresh setiap 5 menit
-        setInterval(function() {
-            refreshData();
-        }, 300000);
+        // setInterval(function() {
+        //     refreshData(); 
+        // }, 300000);
+
+
+        // JavaScript for sidebar navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            const sections = document.querySelectorAll('.section-content');
+
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    // Special handling for map to ensure it renders correctly when its section becomes visible
+                    if (targetId === 'risk-map') {
+                        setTimeout(() => { // Give browser a moment to render the div
+                            map.invalidateSize();
+                        }, 0); 
+                    }
+                }
+            }
+
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('data-target');
+                    // Prevent default for links with data-target, but allow external links (like statistics.php)
+                    if (targetId) { 
+                        e.preventDefault(); 
+                        
+                        sidebarLinks.forEach(item => item.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        showSection(targetId);
+                    }
+                });
+            });
+
+            // Set default active section on load
+            showSection('dashboard-overview');
+        });
     </script>
 </body>
 </html>
