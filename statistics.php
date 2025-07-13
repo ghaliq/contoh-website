@@ -105,8 +105,7 @@ foreach ($kecamatan_names as $name) {
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
-$currentPage = 'stats';
-include 'sidebar.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -261,46 +260,7 @@ include 'sidebar.php';
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
-            <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
-        </div>
-        <ul class="components">
-            <li>
-                <a href="dasboard-admin.php" class="sidebar-link">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
-                </a>
-            </li>
-            <li>
-                <a href="dasboard-admin.php#patient-data" class="sidebar-link">
-                    <i class="fas fa-users"></i> Data Pasien
-                </a>
-            </li>
-            <li>
-                <a href="dasboard-admin.php#risk-map" class="sidebar-link">
-                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
-                </a>
-            </li>
-            <li>
-                <a href="statistics.php" class="sidebar-link active">
-                    <i class="fas fa-chart-bar"></i> Statistik Historis
-                </a>
-            </li>
-            <li>
-                <a href="profile.php" class="sidebar-link">
-                    <i class="fas fa-user-edit"></i> Kelola Profil
-                </a>
-            </li>
-        </ul>
-        <ul class="components">
-            <li>
-                <a href="logout.php" class="sidebar-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </div>
+    <?php $currentPage = 'stats'; include 'sidebar.php'; ?>
 
     <div id="content">
         <div class="main-content-area">
