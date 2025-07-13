@@ -260,7 +260,10 @@ $json_kecamatan_names = json_encode($kecamatan_names);
     </style>
 </head>
 <body>
-    <?php $currentPage = 'stats'; include 'sidebar.php'; ?>
+    <?php 
+    $currentPage = 'stats';
+    include 'sidebar.php'; 
+    ?>
 
     <div id="content">
         <div class="main-content-area">
