@@ -13,6 +13,7 @@ $data_limit_days = 30; // Atau bisa disesuaikan lewat input form di masa depan
 $start_date = date("Y-m-d", strtotime("-{$data_limit_days} days"));
 $end_date = date("Y-m-d");
 
+// Query dimodifikasi untuk hanya mengambil 5 kecamatan selain 'Pontianak Barat Daya'
 $historical_data_query = $conn->prepare("
     SELECT 
         k.name AS kecamatan_name,
@@ -25,7 +26,7 @@ $historical_data_query = $conn->prepare("
     JOIN 
         kecamatan k ON rdd.kecamatan_id = k.id
     WHERE 
-        rdd.record_date BETWEEN ? AND ?
+        rdd.record_date BETWEEN ? AND ? AND k.name != 'Pontianak Barat Daya'
     ORDER BY 
         k.name, rdd.record_date ASC
 ");
@@ -39,8 +40,6 @@ $kecamatan_names = []; // Untuk menyimpan daftar nama kecamatan
 while ($row = $historical_result->fetch_assoc()) {
     $kecamatan_name = $row['kecamatan_name'];
     $record_date = $row['record_date'];
-    $temperature = $row['temperature'];
-    $humidity = $row['humidity'];
     $risk_level = $row['risk_level'];
 
     if (!in_array($kecamatan_name, $kecamatan_names)) {
@@ -49,8 +48,6 @@ while ($row = $historical_result->fetch_assoc()) {
 
     // Siapkan data untuk diagram
     $chart_data[$kecamatan_name]['dates'][] = $record_date;
-    $chart_data[$kecamatan_name]['temperatures'][] = $temperature;
-    $chart_data[$kecamatan_name]['humidities'][] = $humidity;
     
     // Konversi tingkat risiko ke nilai numerik untuk diagram
     $risk_numeric = 0;
@@ -77,26 +74,18 @@ sort($all_dates); // Urutkan tanggal
 // Lengkapi data untuk Chart.js agar semua dataset memiliki panjang yang sama
 $final_chart_datasets = [];
 foreach ($kecamatan_names as $name) {
-    $temp_data = [];
-    $humidity_data = [];
     $risk_data = [];
     
     foreach ($all_dates as $date) {
         $index = array_search($date, $chart_data[$name]['dates'] ?? []);
         if ($index !== false) {
-            $temp_data[] = $chart_data[$name]['temperatures'][$index];
-            $humidity_data[] = $chart_data[$name]['humidities'][$index];
             $risk_data[] = $chart_data[$name]['risk_levels'][$index];
         } else {
             // Jika data tidak ada untuk tanggal ini, gunakan null atau 0
-            $temp_data[] = null;
-            $humidity_data[] = null;
             $risk_data[] = null;
         }
     }
     $final_chart_datasets[$name] = [
-        'temperatures' => $temp_data,
-        'humidities' => $humidity_data,
         'risk_levels' => $risk_data
     ];
 }
@@ -296,7 +285,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             <div class="container-fluid">
                 <div class="header">
                     <h1><i class="fas fa-chart-bar"></i> Statistik Kerawanan DBD Historis</h1>
-                    <p>Data Suhu, Kelembaban, dan Tingkat Risiko per Kecamatan (<?php echo $data_limit_days; ?> Hari Terakhir)</p>
+                    <p>Data Tingkat Risiko per Kecamatan (<?php echo $data_limit_days; ?> Hari Terakhir)</p>
                     <p><a href="<?php echo ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php'; ?>" class="btn btn-sm btn-light"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a> | Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
                 </div>
 
@@ -307,7 +296,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                 <?php else: ?>
                     <div class="row">
                         <?php foreach ($kecamatan_names as $kecamatan): ?>
-                        <div class="col-lg-6">
+                        <div class="col-lg-12">
                             <div class="chart-container">
                                 <h4 class="chart-title">Risiko DBD: <?php echo htmlspecialchars($kecamatan); ?></h4>
                                 <canvas id="riskChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
@@ -318,12 +307,6 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                                         <li><span style="background-color:#28a745;"></span>Rendah (1)</li>
                                     </ul>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="chart-container">
-                                <h4 class="chart-title">Suhu & Kelembaban: <?php echo htmlspecialchars($kecamatan); ?></h4>
-                                <canvas id="tempHumidChart_<?php echo str_replace(' ', '_', $kecamatan); ?>"></canvas>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -414,77 +397,6 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                                         else label += 'Tidak Ada Data';
                                         return label;
                                     }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Diagram Suhu dan Kelembaban
-            const tempHumidCtx = document.getElementById(`tempHumidChart_${safeKecamatanName}`);
-            if (tempHumidCtx) {
-                new Chart(tempHumidCtx, {
-                    type: 'line',
-                    data: {
-                        labels: allDates,
-                        datasets: [
-                            {
-                                label: 'Suhu (°C)',
-                                data: data.temperatures,
-                                borderColor: 'rgb(255, 99, 132)',
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                fill: false,
-                                tension: 0.1,
-                                yAxisID: 'y',
-                                spanGaps: true
-                            },
-                            {
-                                label: 'Kelembaban (%)',
-                                data: data.humidities,
-                                borderColor: 'rgb(54, 162, 235)',
-                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                                fill: false,
-                                tension: 0.1,
-                                yAxisID: 'y1',
-                                spanGaps: true
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        scales: {
-                            y: {
-                                type: 'linear',
-                                display: true,
-                                position: 'left',
-                                title: {
-                                    display: true,
-                                    text: 'Suhu (°C)'
-                                },
-                                beginAtZero: false
-                            },
-                            y1: {
-                                type: 'linear',
-                                display: true,
-                                position: 'right',
-                                title: {
-                                    display: true,
-                                    text: 'Kelembaban (%)'
-                                },
-                                beginAtZero: false,
-                                grid: {
-                                    drawOnChartArea: false,
-                                },
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Tanggal'
                                 }
                             }
                         }
