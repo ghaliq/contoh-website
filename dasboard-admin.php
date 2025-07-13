@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Konfigurasi API Keys
-$openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302'; // Daftar di openweathermap.org
+$openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302';
 
 // Fungsi untuk mengambil data cuaca
 function getWeatherData($lat, $lon, $api_key) {
@@ -26,38 +26,38 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     
     // Faktor suhu (optimal 25-30°C)
     if ($temp >= 25 && $temp <= 30) {
-        $risk_score += 3; // Highest risk contribution for optimal temperature
+        $risk_score += 3;
     } elseif ($temp >= 20 && $temp <= 35) {
-        $risk_score += 2; // Medium risk contribution for slightly outside optimal
+        $risk_score += 2;
     } else {
-        $risk_score += 1; // Lowest risk contribution for temperatures far from optimal
+        $risk_score += 1;
     }
     
     // Faktor kelembaban (optimal 70-90%)
     if ($humidity >= 70 && $humidity <= 90) {
-        $risk_score += 3; // Highest risk contribution for optimal humidity
-    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) { // Above 90% or between 60% and 70%
-        $risk_score += 2; // Medium risk contribution
+        $risk_score += 3;
+    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) {
+        $risk_score += 2;
     } else {
-        $risk_score += 1; // Lowest risk contribution (below 60%)
+        $risk_score += 1;
     }
     
     // Faktor curah hujan (optimal 100-300mm)
     if ($rainfall >= 100 && $rainfall <= 300) {
-        $risk_score += 3; // Highest risk contribution for optimal rainfall
-    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) { // Above 300mm or between 50mm and 100mm
-        $risk_score += 2; // Medium risk contribution
+        $risk_score += 3;
+    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) {
+        $risk_score += 2;
     } else {
-        $risk_score += 1; // Lowest risk contribution (below 50mm)
+        $risk_score += 1;
     }
     
     // Faktor kepadatan penduduk (optimal 4000-8000 per km²)
     if ($population_density >= 4000 && $population_density <= 8000) {
-        $risk_score += 3; // Highest risk contribution for optimal population density
-    } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) { // Above 8000 or between 2000 and 4000
-        $risk_score += 2; // Medium risk contribution
+        $risk_score += 3;
+    } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) {
+        $risk_score += 2;
     } else {
-        $risk_score += 1; // Lowest risk contribution (below 2000)
+        $risk_score += 1;
     }
     
     // Kategorisasi risiko
@@ -89,22 +89,18 @@ foreach ($regions as &$region) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
         
-        // Cek jika data hujan per jam ('1h') tersedia dari API
         if (isset($weather['rain']['1h'])) {
-            $current_rainfall = $weather['rain']['1h']; // Gunakan data API jika ada
-        } 
+            $current_rainfall = $weather['rain']['1h'];
+        }
     } else {
-        // Jika panggilan API gagal seluruhnya, gunakan data simulasi untuk suhu/kelembaban
-        // dan curah hujan akan tetap dari database (sesuai inisialisasi $current_rainfall di awal loop)
         $region['temp'] = rand(27, 33);
         $region['humidity'] = rand(75, 90);
     }
     
-    // Baris ini akan menggunakan nilai curah hujan yang sudah ditentukan ($current_rainfall)
     $region['risk_level'] = calculateRiskLevel(
         $region['temp'], 
         $region['humidity'], 
-        $current_rainfall, // GUNAKAN VARIABEL INI
+        $current_rainfall,
         $region['population_density']
     );
 
@@ -141,7 +137,6 @@ if ($patients_result->num_rows > 0) {
 }
 
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -158,7 +153,7 @@ if ($patients_result->num_rows > 0) {
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            display: flex; /* Use flexbox for overall layout */
+            display: flex;
         }
         
         #sidebar {
@@ -169,11 +164,11 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Push logout to bottom */
+            justify-content: space-between;
             position: sticky;
             top: 0;
-            height: 100vh; /* Make sidebar take full height */
-            overflow-y: auto; /* Enable scrolling if content overflows */
+            height: 100vh;
+            overflow-y: auto;
         }
 
         #sidebar .sidebar-header {
@@ -192,7 +187,7 @@ if ($patients_result->num_rows > 0) {
         #sidebar ul.components {
             padding: 0;
             list-style: none;
-            flex-grow: 1; /* Allow navigation to take available space */
+            flex-grow: 1;
         }
 
         #sidebar ul li {
@@ -220,10 +215,10 @@ if ($patients_result->num_rows > 0) {
         }
 
         #content {
-            flex-grow: 1; /* Allow content to take remaining space */
+            flex-grow: 1;
             padding: 20px;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
-            overflow-y: auto; /* Enable scrolling for main content */
+            overflow-y: auto;
         }
         
         .main-content-area {
@@ -376,16 +371,15 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
         }
 
-        /* Styles for scrollable stats */
         .scrollable-stats {
-            max-height: 320px; /* Adjust as needed */
+            max-height: 320px;
             overflow-y: auto;
             padding: 15px;
             background: #ffffff;
             border: 2px solid #ddd;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px; /* Added margin to separate from control panel */
+            margin-top: 20px;
         }
         .scrollable-stats::-webkit-scrollbar {
             width: 8px;
@@ -417,15 +411,15 @@ if ($patients_result->num_rows > 0) {
         .scrollable-stats .stats-card:last-child {
             margin-bottom: 0;
         }
-        .stats-card.tinggi { border-left-color: #D32F2F; } /* Warna baru untuk Tinggi */
-        .stats-card.sedang { border-left-color: #FFB300; } /* Warna baru untuk Sedang */
-        .stats-card.rendah { border-left-color: #66BB6A; } /* Warna baru untuk Rendah */
+        .stats-card.tinggi { border-left-color: #D32F2F; }
+        .stats-card.sedang { border-left-color: #FFB300; }
+        .stats-card.rendah { border-left-color: #66BB6A; }
 
         .section-content {
-            display: none; /* Hidden by default */
+            display: none;
         }
         .section-content.active {
-            display: block; /* Shown when active */
+            display: block;
         }
     </style>
 </head>
@@ -444,11 +438,6 @@ if ($patients_result->num_rows > 0) {
             <li>
                 <a href="#" class="sidebar-link" data-target="patient-data">
                     <i class="fas fa-users"></i> Data Pasien
-                </a>
-            </li>
-            <li>
-                <a href="#" class="sidebar-link" data-target="risk-map">
-                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
                 </a>
             </li>
             <li>
@@ -478,10 +467,18 @@ if ($patients_result->num_rows > 0) {
         </div>
 
         <div id="dashboard-overview" class="section-content active main-content-area">
-            <h4><i class="fas fa-info-circle"></i> Informasi Umum</h4>
-            <p>Selamat datang di dashboard admin. Di sini Anda dapat mengelola data pasien, memantau tingkat kerawanan DBD di setiap kecamatan, dan melihat statistik historis.</p>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-lg-9">
+                    <h4><i class="fas fa-info-circle"></i> Informasi Umum</h4>
+                    <p>Selamat datang di dashboard admin. Di sini Anda dapat mengelola data pasien, memantau tingkat kerawanan DBD di setiap kecamatan, dan melihat statistik historis.</p>
+                    <div class="row">
+                        <div class="col-12">
+                            <h4 class="mt-4"><i class="fas fa-globe-asia"></i> Peta Risiko DBD</h4>
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3">
                     <div class="legend">
                         <h5><strong>Legenda Tingkat Risiko</strong></h5>
                         <div class="legend-item">
@@ -498,14 +495,11 @@ if ($patients_result->num_rows > 0) {
                             <span>Lokasi Pasien</span>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6">
                     <div class="scrollable-stats" id="statsContainer">
                         <h5><strong>Statistik Risiko Wilayah Saat Ini</strong></h5>
                         <?php
                         $seen = [];
                         foreach ($regions as $region):
-                            // Ensure unique regions if there are duplicates from PHP array structure
                             if (in_array(strtolower($region['name']), $seen)) continue;
                             $seen[] = strtolower($region['name']);
                         ?>
@@ -578,48 +572,6 @@ if ($patients_result->num_rows > 0) {
                 </div>
             </div>
         </div>
-
-        <div id="risk-map" class="section-content main-content-area">
-            <h4><i class="fas fa-globe-asia"></i> Peta Risiko DBD</h4>
-            <div class="row">
-                <div class="col-lg-9">
-                    <div id="map"></div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="legend">
-                        <h5><strong>Legenda Tingkat Risiko</strong></h5>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background-color: #FFB300;"></div> <span>Risiko Sedang</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background-color: #66BB6A;"></div> <span>Risiko Rendah</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background-color: #007bff;"></div>
-                            <span>Lokasi Pasien</span>
-                        </div>
-                    </div>
-                    <div class="legend">
-                        <h5><strong>Panel Kontrol Peta</strong></h5>
-                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="togglePatients()">
-                            <i class="fas fa-user-injured"></i> Toggle Pasien
-                        </button>
-                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="toggleChoropleth()">
-                            <i class="fas fa-map"></i> Toggle Choropleth
-                        </button>
-                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Refresh Data
-                        </button>
-                        <button class="btn btn-custom btn-sm mb-2 w-100" onclick="fitToPontianak()">
-                            <i class="fas fa-crosshairs"></i> Fokus Pontianak
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -645,10 +597,10 @@ if ($patients_result->num_rows > 0) {
         // Fungsi untuk mendapatkan warna berdasarkan risiko
         function getRiskColor(risk) {
             switch(risk) {
-                case 'Tinggi': return '#D32F2F'; // Merah Tua
-                case 'Sedang': return '#FFB300'; // Oranye Kekuningan
-                case 'Rendah': return '#66BB6A'; // Hijau Cerah
-                default: return '#6c757d'; // Warna default jika tidak ada data
+                case 'Tinggi': return '#D32F2F';
+                case 'Sedang': return '#FFB300';
+                case 'Rendah': return '#66BB6A';
+                default: return '#6c757d';
             }
         }
         
@@ -656,7 +608,6 @@ if ($patients_result->num_rows > 0) {
         function createChoropleth() {
             choroplethLayer.clearLayers();
             
-            // Asumsi file GeoJSON berada di direktori yang sama atau dapat diakses secara publik
             fetch("kecamatan_pontianak.geojson") 
                 .then(response => {
                     if (!response.ok) {
@@ -673,7 +624,7 @@ if ($patients_result->num_rows > 0) {
                             feature.properties.risk_level = matchedRegion.risk_level;
                             feature.properties.temp = matchedRegion.temp;
                             feature.properties.humidity = matchedRegion.humidity;
-                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg; // Still using rainfall_avg for display in popup
+                            feature.properties.rainfall_avg = matchedRegion.rainfall_avg;
                             feature.properties.population_density = matchedRegion.population_density;
                         } else {
                             feature.properties.risk_level = 'Tidak Ada Data';
@@ -698,7 +649,7 @@ if ($patients_result->num_rows > 0) {
                             const risk = feature.properties.risk_level;
                             const temp = feature.properties.temp;
                             const humidity = feature.properties.humidity;
-                            const rainfall_avg_display = feature.properties.rainfall_avg; // Use this for display only
+                            const rainfall_avg_display = feature.properties.rainfall_avg;
                             const population_density = feature.properties.population_density;
 
                             layer.bindPopup(`
@@ -763,7 +714,6 @@ if ($patients_result->num_rows > 0) {
         }
         
         function refreshData() {
-            // This will reload the entire page, which is fine for now
             location.reload(); 
         }
         
@@ -775,12 +725,6 @@ if ($patients_result->num_rows > 0) {
         createChoropleth();
         createPatientMarkers();
         
-        // Auto refresh setiap 5 menit
-        // setInterval(function() {
-        //     refreshData(); 
-        // }, 300000);
-
-
         // JavaScript for sidebar navigation
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -793,9 +737,8 @@ if ($patients_result->num_rows > 0) {
                 const targetSection = document.getElementById(targetId);
                 if (targetSection) {
                     targetSection.classList.add('active');
-                    // Special handling for map to ensure it renders correctly when its section becomes visible
                     if (targetId === 'risk-map') {
-                        setTimeout(() => { // Give browser a moment to render the div
+                        setTimeout(() => {
                             map.invalidateSize();
                         }, 0); 
                     }
@@ -805,9 +748,8 @@ if ($patients_result->num_rows > 0) {
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     const targetId = this.getAttribute('data-target');
-                    // Prevent default for links with data-target, but allow external links (like statistics.php)
-                    if (targetId) { 
-                        e.preventDefault(); 
+                    if (targetId) {
+                        e.preventDefault();
                         
                         sidebarLinks.forEach(item => item.classList.remove('active'));
                         this.classList.add('active');
@@ -817,7 +759,6 @@ if ($patients_result->num_rows > 0) {
                 });
             });
 
-            // Set default active section on load
             showSection('dashboard-overview');
         });
     </script>
