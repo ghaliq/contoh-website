@@ -4,6 +4,9 @@ $dashboard_active = ($currentPage === 'dashboard') ? 'active' : '';
 $patient_active = ($currentPage === 'patient') ? 'active' : '';
 $stats_active = ($currentPage === 'stats') ? 'active' : '';
 $profile_active = ($currentPage === 'profile') ? 'active' : '';
+
+// Tentukan tautan dashboard berdasarkan peran pengguna
+$dashboard_link = ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php';
 ?>
 <div id="sidebar">
     <div class="sidebar-header">
@@ -12,15 +15,17 @@ $profile_active = ($currentPage === 'profile') ? 'active' : '';
     </div>
     <ul class="components">
         <li>
-            <a href="dasboard-admin.php" class="sidebar-link <?php echo $dashboard_active; ?>" data-target="dashboard-overview">
+            <a href="<?php echo $dashboard_link; ?>" class="sidebar-link <?php echo $dashboard_active; ?>" data-target="dashboard-overview">
                 <i class="fas fa-tachometer-alt"></i> Dashboard Overview
             </a>
         </li>
+        <?php if ($_SESSION['role'] === 'admin'): ?>
         <li>
             <a href="dasboard-admin.php#patient-data" class="sidebar-link <?php echo $patient_active; ?>" data-target="patient-data">
                 <i class="fas fa-users"></i> Data Pasien
             </a>
         </li>
+        <?php endif; ?>
         <li>
             <a href="statistics.php" class="sidebar-link <?php echo $stats_active; ?>">
                 <i class="fas fa-chart-bar"></i> Statistik Historis
