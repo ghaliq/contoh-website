@@ -24,8 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header("Location: dasboard-admin.php");
     exit;
 }
-$currentPage = 'patient';
-include 'sidebar.php'
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -192,11 +191,7 @@ include 'sidebar.php'
                     <i class="fas fa-users"></i> Data Pasien
                 </a>
             </li>
-            <li>
-                <a href="dasboard-admin.php#risk-map" class="sidebar-link">
-                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
-                </a>
-            </li>
+           
             <li>
                 <a href="statistics.php" class="sidebar-link">
                     <i class="fas fa-chart-bar"></i> Statistik Historis

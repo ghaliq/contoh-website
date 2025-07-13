@@ -169,6 +169,7 @@ if ($patients_result->num_rows > 0) {
             top: 0;
             height: 100vh;
             overflow-y: auto;
+            flex-shrink: 0;
         }
 
         #sidebar .sidebar-header {
@@ -195,8 +196,12 @@ if ($patients_result->num_rows > 0) {
         }
 
         #sidebar ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* jarak antara ikon dan teks */
+            white-space: nowrap; /* jangan pindah baris */
+            width: 100%; /* biar link penuh */
             padding: 10px 15px;
-            display: block;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -216,15 +221,17 @@ if ($patients_result->num_rows > 0) {
 
         #content {
             flex-grow: 1;
-            padding: 20px;
+            padding: 20px 15px;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
             overflow-y: auto;
+            min-height: 100vh;
+            /* Hapus margin-left */
         }
         
         .main-content-area {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            padding: 30px;
+            padding: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
@@ -410,6 +417,25 @@ if ($patients_result->num_rows > 0) {
         .section-content.active {
             display: block;
         }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                z-index: 1000;
+                height: 100vh;
+                width: 220px;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            }
+            #content {
+                margin-left: 220px;
+                padding-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -425,7 +451,7 @@ if ($patients_result->num_rows > 0) {
                 </a>
             </li>
             <li>
-                <a href="dasboard-admin.php#patient-data" class="sidebar-link" data-target="patient-data">
+                <a href="#" class="sidebar-link" data-target="patient-data">
                     <i class="fas fa-users"></i> Data Pasien
                 </a>
             </li>

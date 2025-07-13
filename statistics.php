@@ -127,7 +127,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
         }
         
         #sidebar {
-            width: 280px;
+            width: 250px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
             padding: 20px;
             color: white;
@@ -139,6 +139,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             top: 0;
             height: 100vh;
             overflow-y: auto;
+            flex-shrink: 0;
         }
 
         #sidebar .sidebar-header {
@@ -165,8 +166,12 @@ $json_kecamatan_names = json_encode($kecamatan_names);
         }
 
         #sidebar ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            width: 100%;
             padding: 10px 15px;
-            display: block;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -186,9 +191,10 @@ $json_kecamatan_names = json_encode($kecamatan_names);
 
         #content {
             flex-grow: 1;
-            padding: 20px;
+            padding: 20px 15px;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
             overflow-y: auto;
+            min-height: 100vh;
         }
         
         .main-content-area {
@@ -256,6 +262,26 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             height: 15px;
             margin-right: 5px;
             border-radius: 3px;
+        }
+
+        /* Responsive: sidebar jadi fixed, konten geser ke kanan */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            #sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                z-index: 1000;
+                height: 100vh;
+                width: 220px;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            }
+            #content {
+                margin-left: 220px;
+                padding-top: 20px;
+            }
         }
     </style>
 </head>
