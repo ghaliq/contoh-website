@@ -21,7 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     header("Location: dasboard-admin.php");
     exit;
+    
 }
+$currentPage = 'patient';
+include 'sidebar.php'
 ?>
 <!DOCTYPE html>
 <html lang="id">

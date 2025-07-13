@@ -84,6 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+$currentPage = 'profile';
+include 'sidebar.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">

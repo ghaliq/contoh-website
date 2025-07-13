@@ -105,7 +105,8 @@ foreach ($kecamatan_names as $name) {
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
-
+$currentPage = 'stats';
+include 'sidebar.php';
 ?>
 <!DOCTYPE html>
 <html lang="id">
