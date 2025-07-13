@@ -441,6 +441,11 @@ if ($patients_result->num_rows > 0) {
                 </a>
             </li>
             <li>
+                <a href="#" class="sidebar-link" data-target="dashboard-overview">
+                    <i class="fas fa-map-marked-alt"></i> Peta Risiko
+                </a>
+            </li>
+            <li>
                 <a href="statistics.php" class="sidebar-link">
                     <i class="fas fa-chart-bar"></i> Statistik Historis
                 </a>
@@ -737,7 +742,7 @@ if ($patients_result->num_rows > 0) {
                 const targetSection = document.getElementById(targetId);
                 if (targetSection) {
                     targetSection.classList.add('active');
-                    if (targetId === 'risk-map') {
+                    if (targetId === 'risk-map' || targetId === 'dashboard-overview') {
                         setTimeout(() => {
                             map.invalidateSize();
                         }, 0); 
@@ -759,7 +764,20 @@ if ($patients_result->num_rows > 0) {
                 });
             });
 
-            showSection('dashboard-overview');
+            // Handle URL hash for direct access (e.g., dasboard-admin.php#patient-data)
+            const initialHash = window.location.hash.substring(1);
+            if (initialHash) {
+                const initialTarget = document.querySelector(`.sidebar-link[data-target="${initialHash}"]`);
+                if (initialTarget) {
+                    sidebarLinks.forEach(item => item.classList.remove('active'));
+                    initialTarget.classList.add('active');
+                    showSection(initialHash);
+                } else {
+                    showSection('dashboard-overview');
+                }
+            } else {
+                showSection('dashboard-overview');
+            }
         });
     </script>
 </body>
