@@ -7,10 +7,19 @@ $profile_active = ($currentPage === 'profile') ? 'active' : '';
 
 // Tentukan tautan dashboard berdasarkan peran pengguna
 $dashboard_link = ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php';
+
+// Tentukan judul dan ikon sidebar berdasarkan peran
+if ($_SESSION['role'] === 'admin') {
+    $sidebar_title = 'Admin Panel';
+    $sidebar_icon = 'fas fa-user-shield';
+} else {
+    $sidebar_title = 'User Panel';
+    $sidebar_icon = 'fas fa-chart-bar';
+}
 ?>
 <div id="sidebar">
     <div class="sidebar-header">
-        <h2><i class="fas fa-user-shield"></i> Admin Panel</h2>
+        <h2><i class="<?php echo $sidebar_icon; ?>"></i> <?php echo $sidebar_title; ?></h2>
         <small>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?></small>
     </div>
     <ul class="components">
