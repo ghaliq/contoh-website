@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'db.php'; 
 
 // Check if user is logged in and is admin
@@ -157,7 +157,7 @@ if ($patients_result->num_rows > 0) {
         }
         
         #sidebar {
-            width: 280px;
+            width: 250px; /* Lebar diperbaiki menjadi 250px */
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
             padding: 20px;
             color: white;
