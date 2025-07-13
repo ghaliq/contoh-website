@@ -371,7 +371,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                         datasets: [{
                             label: 'Tingkat Risiko',
                             data: data.risk_levels,
-                            borderColor: getRiskLevelColor(data.risk_levels[data.risk_levels.length - 1]), // Warna garis berdasarkan risiko terakhir
+                            borderColor: getRiskLevelColor(data.risk_levels[data.risk_levels.length - 1]),
                             backgroundColor: getRiskLevelColor(data.risk_levels[data.risk_levels.length - 1]),
                             fill: false,
                             tension: 0.1,
@@ -379,7 +379,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                             pointBackgroundColor: data.risk_levels.map(value => getRiskLevelColor(value)),
                             pointBorderColor: 'white',
                             pointBorderWidth: 2,
-                            spanGaps: true // Menghubungkan titik data yang null
+                            spanGaps: true
                         }]
                     },
                     options: {
@@ -387,7 +387,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                max: 3.5, // Maksimum 3 untuk risiko
+                                max: 3.5,
                                 ticks: {
                                     stepSize: 1,
                                     callback: function(value, index, values) {
@@ -488,7 +488,7 @@ $json_kecamatan_names = json_encode($kecamatan_names);
                                 },
                                 beginAtZero: false,
                                 grid: {
-                                    drawOnChartArea: false, // only draw grid lines for the first y axis
+                                    drawOnChartArea: false,
                                 },
                             },
                             x: {
