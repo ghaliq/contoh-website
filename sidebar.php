@@ -2,7 +2,6 @@
 // Tentukan tautan aktif berdasarkan variabel $currentPage yang akan di-include
 $dashboard_active = ($currentPage === 'dashboard') ? 'active' : '';
 $patient_active = ($currentPage === 'patient') ? 'active' : '';
-$riskmap_active = ($currentPage === 'riskmap') ? 'active' : '';
 $stats_active = ($currentPage === 'stats') ? 'active' : '';
 $profile_active = ($currentPage === 'profile') ? 'active' : '';
 ?>
@@ -13,18 +12,13 @@ $profile_active = ($currentPage === 'profile') ? 'active' : '';
     </div>
     <ul class="components">
         <li>
-            <a href="dasboard-admin.php" class="sidebar-link <?php echo $dashboard_active; ?>">
+            <a href="dasboard-admin.php" class="sidebar-link <?php echo $dashboard_active; ?>" data-target="dashboard-overview">
                 <i class="fas fa-tachometer-alt"></i> Dashboard Overview
             </a>
         </li>
         <li>
-            <a href="dasboard-admin.php#patient-data" class="sidebar-link <?php echo $patient_active; ?>">
+            <a href="dasboard-admin.php#patient-data" class="sidebar-link <?php echo $patient_active; ?>" data-target="patient-data">
                 <i class="fas fa-users"></i> Data Pasien
-            </a>
-        </li>
-        <li>
-            <a href="dasboard-admin.php#dashboard-overview" class="sidebar-link <?php echo $riskmap_active; ?>">
-                <i class="fas fa-map-marked-alt"></i> Peta Risiko
             </a>
         </li>
         <li>
