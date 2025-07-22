@@ -144,7 +144,7 @@ if ($patients_result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Monitoring DBD Pontianak</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/leaflet-ajax/dist/leaflet.ajax.min.js"></script> <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -256,6 +256,16 @@ if ($patients_result->num_rows > 0) {
             font-size: 1.1rem;
             opacity: 0.9;
         }
+
+        /* CSS for city-info box - copied from index.php */
+        .city-info {
+            background: linear-gradient(45deg, #2c5530, #1a7037);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
         
         .table-header {
             display: flex;
@@ -303,7 +313,7 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
         
-        .btn-custom {
+        .btn-custom { /* copied from index.php */
             background: linear-gradient(45deg, #2c5530, #1a7037);
             border: none;
             color: white;
@@ -312,7 +322,7 @@ if ($patients_result->num_rows > 0) {
             transition: all 0.3s ease;
         }
         
-        .btn-custom:hover {
+        .btn-custom:hover { /* copied from index.php */
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             color: white;
@@ -370,6 +380,15 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
         }
 
+        /* CSS for Control Panel - copied from index.php */
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
         .scrollable-stats {
             max-height: 320px;
             overflow-y: auto;
@@ -378,7 +397,7 @@ if ($patients_result->num_rows > 0) {
             border: 2px solid #ddd;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
+            margin-top: 20px; /* Dipertahankan untuk jarak dengan Control Panel */
         }
         .scrollable-stats::-webkit-scrollbar {
             width: 8px;
@@ -481,20 +500,14 @@ if ($patients_result->num_rows > 0) {
             <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
         </div>
 
+        <div class="city-info"> <h5><i class="fas fa-map-marker-alt"></i> Kota Pontianak, Kalimantan Barat</h5>
+            <p>Monitoring berbasis data cuaca tropis dan kepadatan penduduk</p>
+        </div>
+
         <div id="dashboard-overview" class="section-content active main-content-area">
             <div class="row">
-                <div class="col-lg-9">
-                    <h4><i class="fas fa-info-circle"></i> Informasi Umum</h4>
-                    <p>Selamat datang di dashboard admin. Di sini Anda dapat mengelola data pasien, memantau tingkat kerawanan DBD di setiap kecamatan, dan melihat statistik historis.</p>
-                    <div class="row">
-                        <div class="col-12">
-                            <h4 class="mt-4"><i class="fas fa-globe-asia"></i> Peta Risiko DBD</h4>
-                            <div id="map"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="legend">
+                <div class="col-lg-8"> <div id="map"></div> </div>
+                <div class="col-lg-4"> <div class="legend">
                         <h5><strong>Legenda Tingkat Risiko</strong></h5>
                         <div class="legend-item">
                             <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
@@ -509,6 +522,24 @@ if ($patients_result->num_rows > 0) {
                             <div class="legend-color" style="background-color: #007bff;"></div>
                             <span>Lokasi Pasien</span>
                         </div>
+                    </div>
+                    <div class="control-panel">
+                        <h5><strong>Panel Kontrol</strong></h5>
+                        <button class="btn btn-custom btn-sm mb-2" onclick="togglePatients()">
+                            <i class="fas fa-user-injured"></i> Toggle Pasien
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2" onclick="toggleChoropleth()">
+                            <i class="fas fa-map"></i> Toggle Choropleth
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                        <button class="btn btn-custom btn-sm mb-2" onclick="fitToPontianak()">
+                            <i class="fas fa-crosshairs"></i> Fokus Pontianak
+                        </button>
+                        <a href="statistics.php" class="btn btn-custom btn-sm mb-2 w-100">
+                            <i class="fas fa-chart-bar"></i> Lihat Statistik
+                        </a>
                     </div>
                     <div class="scrollable-stats" id="statsContainer">
                         <h5><strong>Statistik Risiko Wilayah Saat Ini</strong></h5>
@@ -592,7 +623,7 @@ if ($patients_result->num_rows > 0) {
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet-ajax/dist/leaflet.ajax.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
     <script>

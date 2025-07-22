@@ -52,11 +52,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             display: flex;
+            flex-direction: column; /* Mengubah arah flex menjadi kolom */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             color: #333;
+        }
+        .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
+            margin-bottom: 25px;
+            padding: 25px;
+            background: linear-gradient(45deg, #2c5530, #1a7037);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            color: white;
+            text-align: center;
+            width: 100%;
+            max-width: 80%; 
+            box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
         }
         .register-container {
             background: rgba(255, 255, 255, 0.98);
@@ -114,9 +127,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
     </style>
 </head>
 <body>
+    <div class="welcome-box">
+        <h3 style="color: white; margin-bottom: 10px;"><i class="fas fa-user-plus"></i> Selamat datang di website Sistem Monitoring DBD Pontianak</h3>
+        <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Daftar akun baru Anda untuk memulai.</p>
+    </div>
     <div class="register-container">
-        <h3><i class="fas fa-user-plus"></i> Register</h3>
-        <?php if (!empty($message)): ?>
+        <h3>Register</h3> <?php if (!empty($message)): ?>
             <div class="alert <?php echo strpos($message, 'berhasil') !== false ? 'alert-success' : 'alert-danger'; ?>" role="alert">
                 <?php echo $message; ?>
             </div>
