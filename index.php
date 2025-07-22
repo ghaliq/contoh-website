@@ -156,6 +156,7 @@ if ($patients_result->num_rows > 0) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Kerawanan Demam Berdarah - Pontianak</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet-ajax/dist/leaflet.ajax.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -618,10 +619,10 @@ if ($patients_result->num_rows > 0) {
             patients.forEach(function(patient, index) {
                 var marker = L.marker([parseFloat(patient.latitude), parseFloat(patient.longitude)], {
                     icon: L.divIcon({
-                        className: 'patient-marker',
-                        html: '<div style="background-color: #007bff; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">' + (index + 1) + '</div>',
-                        iconSize: [24, 24],
-                        iconAnchor: [12, 12]
+                        className: 'patient-location-marker', /* Kelas baru untuk styling pin */
+                        html: '<i class="fas fa-location-dot" style="color: #007bff; font-size: 30px;"></i>', /* Ikon pin dengan warna biru */
+                        iconSize: [30, 30], /* Ukuran ikon */
+                        iconAnchor: [15, 30] /* Titik jangkar di ujung bawah pin */
                     })
                 }).addTo(patientsLayer);
                 
