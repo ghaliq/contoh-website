@@ -56,11 +56,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             display: flex;
+            flex-direction: column; /* Mengubah arah flex menjadi kolom */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             color: #333;
+        }
+        .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
+            margin-bottom: 25px;
+            padding: 25px;
+            background: linear-gradient(45deg, #2c5530, #1a7037);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            color: white;
+            text-align: center;
+            width: 100%;
+            max-width: 80%; 
+            box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
         }
         .login-container {
             background: rgba(255, 255, 255, 0.98);
@@ -118,8 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
     </style>
 </head>
 <body>
+    <div class="welcome-box">
+        <h3 style="color: white; margin-bottom: 10px;"><i class="fas fa-sign-in-alt"></i> Selamat datang di website Sistem Monitoring DBD Pontianak</h3>
+        <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;"> Silakan masuk ke akun Anda.</p>
+    </div>
     <div class="login-container">
-        <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
         <?php if (!empty($error_message)): ?>
             <div class="alert alert-danger" role="alert">
                 <?php echo $error_message; ?>
