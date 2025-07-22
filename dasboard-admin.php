@@ -222,7 +222,7 @@ if ($patients_result->num_rows > 0) {
         #content {
             flex-grow: 1;
             padding: 20px 15px;
-            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             overflow-y: auto;
             min-height: 100vh;
             /* Hapus margin-left */

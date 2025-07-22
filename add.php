@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             margin: 0;
             padding: 0;
             min-height: 100vh;
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         #content {
             flex-grow: 1;
             padding: 20px;
-            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             overflow-y: auto;
         }
         

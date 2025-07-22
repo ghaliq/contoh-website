@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
+            background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             display: flex;
             justify-content: center;
             align-items: center;
