@@ -62,13 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
         .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
             margin-bottom: 25px;
             padding: 25px;
-            background: linear-gradient(45deg, #2c5530, #1a7037);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             color: white;
             text-align: center;
             width: 100%;
-            max-width: 80%; 
+            max-width: 100%; 
             box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
         }
         .register-container {

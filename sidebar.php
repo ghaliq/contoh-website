@@ -48,8 +48,7 @@ if ($_SESSION['role'] === 'admin') {
     </ul>
     <ul class="components">
         <li>
-            <a href="logout.php" class="sidebar-link">
-                <i class="fas fa-sign-out-alt"></i> Logout
+            <a href="logout.php" class="sidebar-link logout-link"> <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </li>
     </ul>

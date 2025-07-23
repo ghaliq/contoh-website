@@ -98,6 +98,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateX(5px);
         }
 
+        /* Gaya khusus untuk tombol logout */
+        #sidebar ul li a.logout-link {
+            background: linear-gradient(45deg, #dc3545, #b82c3b); /* Red gradient */
+            color: white; /* White text */
+            padding: 10px 15px; /* Same padding as other links */
+            border-radius: 8px; /* Same border radius */
+            font-weight: bold; /* Make text bold */
+        }
+
+        #sidebar ul li a.logout-link:hover {
+            background: linear-gradient(45deg, #b82c3b, #dc3545); /* Slightly darker/different red on hover */
+            transform: translateX(5px); /* Keep the slide effect */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
+        }
+
         #sidebar ul li a i {
             margin-right: 10px;
         }
@@ -204,8 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </ul>
         <ul class="components">
             <li>
-                <a href="logout.php" class="sidebar-link">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+                <a href="logout.php" class="sidebar-link logout-link"> <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
         </ul>

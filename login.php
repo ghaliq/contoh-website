@@ -65,14 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
         }
         .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
             margin-bottom: 25px;
+            margin-top: -130px;
             padding: 25px;
-            background: linear-gradient(45deg, #2c5530, #1a7037);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             color: white;
             text-align: center;
             width: 100%;
-            max-width: 80%; 
+            max-width: 100%; 
             box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
         }
         .login-container {
@@ -151,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             <button type="submit" class="btn btn-primary"><i class="fas fa-lock"></i> Login</button>
         </form>
         <p>Belum punya akun? <a href="register.php">Daftar di sini</a></p>
-        <p><a href="forgot_password.php">Lupa Password?</a></p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
