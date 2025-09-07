@@ -100,6 +100,37 @@ if ($users_result->num_rows > 0) {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+         .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-radius: 10px;
+        }
+          .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+         .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+         .modal-header {
+            background: linear-gradient(45deg, #2c5530, #1a7037);
+            color: white;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2c5530 0%, #1a7037 100%);
@@ -212,6 +243,10 @@ if ($users_result->num_rows > 0) {
 <body>
     <?php $currentPage = 'user_management'; include 'sidebar.php'; ?>
     <div id="content">
+        <div class="header">
+            <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
+            <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
+        </div>
         <div class="main-content-area">
             <div class="container-fluid">
                 <div class="table-header">

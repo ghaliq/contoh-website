@@ -381,7 +381,6 @@ $is_all_months_view = ($selected_month == 0);
                 <div class="header">
                     <h1><i class="fas fa-chart-bar"></i> Statistik Kerawanan DBD Historis</h1>
                     <p>Data Tingkat Risiko per Kecamatan</p>
-                    <p><a href="<?php echo ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php'; ?>" class="btn btn-sm btn-light"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a> | Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
                 </div>
                 
                 <div class="filter-container">
@@ -462,7 +461,8 @@ $is_all_months_view = ($selected_month == 0);
         const dateToMonth = <?php echo $json_date_to_month; ?>;
         const monthColors = <?php echo $json_month_colors; ?>;
         const isAllMonthsView = <?php echo json_encode($is_all_months_view); ?>;
-        
+        const selectedMonth = <?php echo $json_selected_month; ?>;
+
         function getRiskLevelColor(value) {
             if (value === 3) return '#dc3545';
             if (value === 2) return '#ffc107';
@@ -481,23 +481,22 @@ $is_all_months_view = ($selected_month == 0);
                 pointBackgroundColor: data.risk_levels.map(value => getRiskLevelColor(value)),
                 pointBorderColor: 'white',
                 pointBorderWidth: 2,
-                spanGaps: true
+                spanGaps: true,
+                borderColor: 'gray' // Warna default jika tidak ada segmen
             };
 
             if (isAllMonthsView) {
-                datasetConfig.borderColor = 'gray'; // Garis dasar abu-abu
+                datasetConfig.borderColor = 'transparent'; // Gunakan garis transparan sebagai default
                 datasetConfig.segment = {
                     borderColor: (ctx) => {
-                        const date = ctx.p0.label;
+                        const date = allDates[ctx.p0.dataIndex];
                         const month = dateToMonth[date];
                         return monthColors[month] || '#6c757d';
                     }
                 };
             } else {
                 // Tampilan bulanan, ambil satu warna dari bulan yang dipilih
-                const firstDate = allDates[0];
-                const firstMonth = dateToMonth[firstDate];
-                datasetConfig.borderColor = monthColors[firstMonth] || 'gray';
+                datasetConfig.borderColor = monthColors[selectedMonth] || 'gray';
             }
 
             const riskCtx = document.getElementById(`riskChart_${safeKecamatanName}`);
