@@ -45,10 +45,10 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
         $risk_score += 1;
     }
 
-    // Faktor curah hujan (optimal 100–300 mm)
-    if ($rainfall >= 100 && $rainfall <= 300) {
+    // Faktor curah hujan (optimal 5–10 mm)
+    if ($rainfall >= 5 && $rainfall <= 10) {
         $risk_score += 3;
-    } elseif (($rainfall > 50 && $rainfall < 100) || ($rainfall > 300 && $rainfall <= 500)) {
+    } elseif ($rainfall > 1 && $rainfall < 5) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
