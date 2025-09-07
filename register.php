@@ -1,44 +1,51 @@
 <?php
-// session_start(); // Baris ini dihapus karena session_start() sudah ada di db.php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
-$message = ''; // Variabel untuk menyimpan pesan
+$message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
-    $username = $_POST['username']; // Ini akan menjadi nama tampilan
-    $email = $_POST['email']; // Email untuk login
-    $password = $_POST['password']; // Password
-    $role = 'user'; // Atur role secara default menjadi 'user' untuk setiap pendaftaran baru
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitasi input dari pengguna
+    $username = htmlspecialchars(trim($_POST['username']));
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+    $password = $_POST['password'];
+    $role = 'user';
 
-    // Hash password sebelum menyimpannya ke database untuk keamanan
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-    // Cek apakah email atau username sudah ada di database
-    $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
-    $check_stmt->bind_param("ss", $email, $username);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
-
-    if ($check_result->num_rows > 0) { // Jika email atau username sudah terdaftar
-        $existing_user = $check_result->fetch_assoc();
-        if ($existing_user['email'] === $email) {
-            $message = "Email sudah terdaftar. Silakan gunakan email lain.";
-        } else {
-            $message = "Nama pengguna sudah terdaftar. Silakan gunakan nama lain.";
-        }
+    // Validasi input
+    if (empty($username) || empty($email) || empty($password)) {
+        $message = "Semua field harus diisi.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $message = "Format email tidak valid.";
+    } elseif (strlen($password) < 8 || !preg_match("#[0-9]+#", $password) || !preg_match("#[a-zA-Z]+#", $password) || !preg_match("/[^\w\d\s]/", $password)) {
+        $message = "Password harus minimal 8 karakter dan mengandung huruf, angka, dan simbol.";
     } else {
-        // Siapkan dan jalankan query untuk memasukkan user baru
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("ssss", $username, $email, $hashed_password, $role);
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        if ($stmt->execute()) { // Jika berhasil disimpan
-            $message = "Registrasi berhasil! Silakan <a href='login.php'>Login</a>.";
-        } else { // Jika terjadi error
-            $message = "Terjadi kesalahan saat registrasi: " . $conn->error;
+        $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? OR username = ?");
+        $check_stmt->bind_param("ss", $email, $username);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+
+        if ($check_result->num_rows > 0) {
+            $existing_user = $check_result->fetch_assoc();
+            if ($existing_user['email'] === $email) {
+                $message = "Email sudah terdaftar. Silakan gunakan email lain.";
+            } else {
+                $message = "Nama pengguna sudah terdaftar. Silakan gunakan nama lain.";
+            }
+        } else {
+            $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $username, $email, $hashed_password, $role);
+
+            if ($stmt->execute()) {
+                $message = "Registrasi berhasil! Silakan <a href='login.php'>Login</a>.";
+            } else {
+                $message = "Terjadi kesalahan saat registrasi: " . $conn->error;
+            }
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -52,24 +59,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             display: flex;
-            flex-direction: column; /* Mengubah arah flex menjadi kolom */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             color: #333;
         }
-        .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
+        .welcome-box {
             margin-bottom: 25px;
             padding: 25px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(45deg, #2c5530, #1a7037);
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             color: white;
             text-align: center;
             width: 100%;
-            max-width: 100%; 
-            box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
+            max-width: 80%;
+            box-sizing: border-box;
         }
         .register-container {
             background: rgba(255, 255, 255, 0.98);
@@ -132,7 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit
         <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Daftar akun baru Anda untuk memulai.</p>
     </div>
     <div class="register-container">
-        <h3>Register</h3> <?php if (!empty($message)): ?>
+        <h3>Register</h3>
+        <?php if (!empty($message)): ?>
             <div class="alert <?php echo strpos($message, 'berhasil') !== false ? 'alert-success' : 'alert-danger'; ?>" role="alert">
                 <?php echo $message; ?>
             </div>

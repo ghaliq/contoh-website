@@ -1,45 +1,47 @@
 <?php
-// session_start(); // Baris ini dihapus karena session_start() sudah ada di db.php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
-$error_message = ''; // Variabel untuk menyimpan pesan error
+$error_message = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode POST)
-    $email = $_POST['email']; // Ambil email dari input form (bukan lagi username)
-    $password = $_POST['password']; // Ambil password dari input form
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitasi input email
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+    $password = $_POST['password'];
 
-    // Siapkan dan jalankan query untuk mengambil data user berdasarkan email
-    $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email); // Bind parameter email
-    $stmt->execute(); // Jalankan query
-    $result = $stmt->get_result(); // Dapatkan hasilnya
-
-    if ($result->num_rows > 0) { // Jika ada user dengan email tersebut
-        $user = $result->fetch_assoc(); // Ambil data user
-        if (password_verify($password, $user['password'])) { // Verifikasi password yang dimasukkan dengan hash di database
-            // Jika password cocok, set variabel sesi
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username']; // Username sekarang berperan sebagai nama tampilan
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['role'] = $user['role'];
-
-    // --- TAMBAHKAN KODE DEBUGGING DI SINI ---
-    echo "Nilai role yang ditemukan dari database: " . $user['role'] . "<br>";
-    echo "Nilai role yang disimpan di sesi: " . $_SESSION['role'] . "<br>";
-    // ----------------------------------------
-
-            // Arahkan pengguna berdasarkan perannya
-            if ($user['role'] === 'admin') {
-                header("Location: dasboard-admin.php"); // Redirect ke dashboard admin jika admin
-            } else {
-                header("Location: index.php"); // Redirect ke index jika user biasa
-            }
-            exit; // Hentikan eksekusi script
-        } else {
-            $error_message = "Email atau password salah."; // Pesan error jika password tidak cocok
-        }
+    // Validasi email
+    if (empty($email) || empty($password)) {
+        $error_message = "Email dan password harus diisi.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = "Format email tidak valid.";
     } else {
-        $error_message = "Email atau password salah."; // Pesan error jika email tidak ditemukan
+        $stmt = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($password, $user['password'])) {
+                // Regenerasi ID sesi untuk mencegah fiksasi sesi
+                session_regenerate_id(true);
+
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
+
+                if ($user['role'] === 'admin') {
+                    header("Location: dasboard-admin.php");
+                } else {
+                    header("Location: index.php");
+                }
+                exit;
+            } else {
+                $error_message = "Email atau password salah.";
+            }
+        } else {
+            $error_message = "Email atau password salah.";
+        }
     }
 }
 ?>
@@ -56,25 +58,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             display: flex;
-            flex-direction: column; /* Mengubah arah flex menjadi kolom */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             color: #333;
         }
-        .welcome-box { /* Menambahkan kelas baru untuk styling kotak selamat datang */
+        .welcome-box {
             margin-bottom: 25px;
-            margin-top: -130px;
             padding: 25px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(45deg, #2c5530, #1a7037);
             border-radius: 15px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             color: white;
             text-align: center;
             width: 100%;
-            max-width: 100%; 
-            box-sizing: border-box; /* Memastikan padding tidak menambah lebar total */
+            max-width: 80%;
+            box-sizing: border-box;
         }
         .login-container {
             background: rgba(255, 255, 255, 0.98);
@@ -152,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') { // Jika formulir disubmit (metode P
             <button type="submit" class="btn btn-primary"><i class="fas fa-lock"></i> Login</button>
         </form>
         <p>Belum punya akun? <a href="register.php">Daftar di sini</a></p>
+        <p><a href="forgot_password.php">Lupa Password?</a></p>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>

@@ -1,16 +1,13 @@
 <?php 
 include 'db.php'; 
 
-// Check if user is logged in and is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit;
 }
 
-// Konfigurasi API Keys
 $openweather_api_key = 'd9c47d89a3ce02eba2dfd861f14ce302';
 
-// Fungsi untuk mengambil data cuaca
 function getWeatherData($lat, $lon, $api_key) {
     $url = "https://api.openweathermap.org/data/2.5/weather?lat={$lat}&lon={$lon}&units=metric&appid={$api_key}";
     $response = @file_get_contents($url);
@@ -20,52 +17,46 @@ function getWeatherData($lat, $lon, $api_key) {
     return json_decode($response, true);
 }
 
-// Fungsi untuk menghitung tingkat kerawanan
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
     
-    // Faktor suhu (optimal 25–30°C)
     if ($temp >= 25 && $temp <= 30) {
         $risk_score += 3;
-    } elseif (($temp >= 20 && $temp < 25) || ($temp > 30 && $temp <= 35)) {
-        $risk_score += 2;
-    } else {
-        $risk_score += 1;
-    }
-
-    // Faktor kelembaban (optimal 70–90%)
-    if ($humidity >= 70 && $humidity <= 90) {
-        $risk_score += 3;
-    } elseif (($humidity >= 50 && $humidity < 70) || ($humidity > 90 && $humidity <= 100)) {
-        $risk_score += 2;
-    } else {
-        $risk_score += 1;
-    }
-
-    // Faktor curah hujan (optimal 100–300 mm)
-    if ($rainfall >= 100 && $rainfall <= 300) {
-        $risk_score += 3;
-    } elseif (($rainfall > 50 && $rainfall < 100) || ($rainfall > 300 && $rainfall <= 500)) {
+    } elseif ($temp >= 20 && $temp <= 35) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
     }
     
-    // Faktor kepadatan penduduk (optimal >8000 per km²)
-    if ($population_density > 8000) {
-    $risk_score += 3;
-    } elseif ($population_density >= 4000 && $population_density < 8000) {
-    $risk_score += 2;
-    } elseif ($population_density < 4000) {
-    $risk_score += 1;
-}
-    // Kategorisasi risiko
+    if ($humidity >= 70 && $humidity <= 90) {
+        $risk_score += 3;
+    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) {
+        $risk_score += 2;
+    } else {
+        $risk_score += 1;
+    }
+    
+    if ($rainfall >= 100 && $rainfall <= 300) {
+        $risk_score += 3;
+    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) {
+        $risk_score += 2;
+    } else {
+        $risk_score += 1;
+    }
+    
+    if ($population_density >= 4000 && $population_density <= 8000) {
+        $risk_score += 3;
+    } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) {
+        $risk_score += 2;
+    } else {
+        $risk_score += 1;
+    }
+    
     if ($risk_score >= 10) return 'Tinggi';
     elseif ($risk_score >= 7) return 'Sedang';
     else return 'Rendah';
 }
 
-// Mengambil data kecamatan dari database
 $regions_query = "SELECT id, name, latitude, longitude, population_density, rainfall_avg FROM kecamatan";
 $regions_result = $conn->query($regions_query);
 $regions = [];
@@ -77,11 +68,8 @@ if ($regions_result->num_rows > 0) {
 
 $today = date("Y-m-d");
 
-// Mengambil data cuaca untuk setiap wilayah dan menyimpan ke database
 foreach ($regions as &$region) {
     $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
-    
-    // Inisialisasi curah hujan dari database sebagai nilai fallback
     $current_rainfall = $region['rainfall_avg']; 
 
     if (isset($weather['main'])) {
@@ -103,7 +91,6 @@ foreach ($regions as &$region) {
         $region['population_density']
     );
 
-    // Simpan data harian ke database (hanya sekali per hari per kecamatan)
     $check_daily_data_query = $conn->prepare("SELECT id FROM region_daily_data WHERE kecamatan_id = ? AND record_date = ?");
     $check_daily_data_query->bind_param("is", $region['id'], $today);
     $check_daily_data_query->execute();
@@ -125,7 +112,6 @@ foreach ($regions as &$region) {
     }
 }
 
-// Mengambil data pasien dari database
 $patients_query = "SELECT * FROM pasien ORDER BY id DESC";
 $patients_result = $conn->query($patients_query);
 $patients = [];
@@ -198,9 +184,9 @@ if ($patients_result->num_rows > 0) {
         #sidebar ul li a {
             display: flex;
             align-items: center;
-            gap: 10px; /* jarak antara ikon dan teks */
-            white-space: nowrap; /* jangan pindah baris */
-            width: 100%; /* biar link penuh */
+            gap: 10px;
+            white-space: nowrap;
+            width: 100%;
             padding: 10px 15px;
             color: white;
             text-decoration: none;
@@ -214,22 +200,6 @@ if ($patients_result->num_rows > 0) {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
         }
-        
-        /* Gaya khusus untuk tombol logout */
-        #sidebar ul li a.logout-link {
-            background: linear-gradient(45deg, #dc3545, #b82c3b); /* Red gradient */
-            color: white; /* White text */
-            padding: 10px 15px; /* Same padding as other links */
-            border-radius: 8px; /* Same border radius */
-            font-weight: bold; /* Make text bold */
-        }
-
-        #sidebar ul li a.logout-link:hover {
-            background: linear-gradient(45deg, #b82c3b, #dc3545); /* Slightly darker/different red on hover */
-            transform: translateX(5px); /* Keep the slide effect */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
-        }
-
 
         #sidebar ul li a i {
             margin-right: 10px;
@@ -241,7 +211,6 @@ if ($patients_result->num_rows > 0) {
             background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
             overflow-y: auto;
             min-height: 100vh;
-            /* Hapus margin-left */
         }
         
         .main-content-area {
@@ -273,7 +242,6 @@ if ($patients_result->num_rows > 0) {
             opacity: 0.9;
         }
 
-        /* CSS for city-info box - copied from index.php */
         .city-info {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             color: white;
@@ -329,7 +297,7 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
         
-        .btn-custom { /* copied from index.php */
+        .btn-custom {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             border: none;
             color: white;
@@ -338,7 +306,7 @@ if ($patients_result->num_rows > 0) {
             transition: all 0.3s ease;
         }
         
-        .btn-custom:hover { /* copied from index.php */
+        .btn-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             color: white;
@@ -396,7 +364,6 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);
         }
 
-        /* CSS for Control Panel - copied from index.php */
         .control-panel {
             background: white;
             padding: 20px;
@@ -413,7 +380,7 @@ if ($patients_result->num_rows > 0) {
             border: 2px solid #ddd;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px; /* Dipertahankan untuk jarak dengan Control Panel */
+            margin-top: 20px;
         }
         .scrollable-stats::-webkit-scrollbar {
             width: 8px;
@@ -491,6 +458,11 @@ if ($patients_result->num_rows > 0) {
                 </a>
             </li>
             <li>
+                <a href="user_management.php" class="sidebar-link">
+                    <i class="fas fa-users-cog"></i> Manajemen Pengguna
+                </a>
+            </li>
+            <li>
                 <a href="statistics.php" class="sidebar-link">
                     <i class="fas fa-chart-bar"></i> Statistik Historis
                 </a>
@@ -503,7 +475,8 @@ if ($patients_result->num_rows > 0) {
         </ul>
         <ul class="components">
             <li>
-                <a href="logout.php" class="sidebar-link logout-link"> <i class="fas fa-sign-out-alt"></i> Logout
+                <a href="logout.php" class="sidebar-link">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
         </ul>
@@ -512,7 +485,7 @@ if ($patients_result->num_rows > 0) {
     <div id="content">
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
-            <p>Sistem Monitoring Demam Berdarah Dungue - Kota Pontianak</p>
+            <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
         </div>
 
         <div class="city-info"> <h5><i class="fas fa-map-marker-alt"></i> Kota Pontianak, Kalimantan Barat</h5>
@@ -643,22 +616,18 @@ if ($patients_result->num_rows > 0) {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
     <script>
-        // Inisialisasi peta
         var map = L.map('map').setView([-0.0263, 109.3425], 12);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
-        // Data dari PHP
         var regions = <?php echo json_encode($regions); ?>;
         var patients = <?php echo json_encode($patients); ?>;
         
-        // Layer groups
         var choroplethLayer = L.layerGroup().addTo(map);
         var patientsLayer = L.layerGroup().addTo(map);
         
-        // Fungsi untuk mendapatkan warna berdasarkan risiko
         function getRiskColor(risk) {
             switch(risk) {
                 case 'Tinggi': return '#D32F2F';
@@ -668,7 +637,6 @@ if ($patients_result->num_rows > 0) {
             }
         }
         
-        // Membuat choropleth untuk wilayah dari GeoJSON
         function createChoropleth() {
             choroplethLayer.clearLayers();
             
@@ -732,17 +700,16 @@ if ($patients_result->num_rows > 0) {
                 .catch(error => console.error("Gagal memuat GeoJSON:", error));
         }
         
-        // Membuat markers untuk pasien dari database
         function createPatientMarkers() {
             patientsLayer.clearLayers();
             
             patients.forEach(function(patient, index) {
                 var marker = L.marker([parseFloat(patient.latitude), parseFloat(patient.longitude)], {
                     icon: L.divIcon({
-                        className: 'patient-location-marker', /* Kelas baru untuk styling pin */
-                        html: '<i class="fas fa-location-dot" style="color: #007bff; font-size: 30px;"></i>', /* Ikon pin dengan warna biru */
-                        iconSize: [30, 30], /* Ukuran ikon */
-                        iconAnchor: [15, 30] /* Titik jangkar di ujung bawah pin */
+                        className: 'patient-location-marker',
+                        html: '<i class="fas fa-location-dot" style="color: #007bff; font-size: 30px;"></i>',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30]
                     })
                 }).addTo(patientsLayer);
                 
@@ -760,7 +727,6 @@ if ($patients_result->num_rows > 0) {
             });
         }
         
-        // Fungsi kontrol
         function togglePatients() {
             if (map.hasLayer(patientsLayer)) {
                 map.removeLayer(patientsLayer);
@@ -785,11 +751,9 @@ if ($patients_result->num_rows > 0) {
             map.setView([-0.0263, 109.3425], 12);
         }
         
-        // Inisialisasi
         createChoropleth();
         createPatientMarkers();
         
-        // JavaScript for sidebar navigation
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
             const sections = document.querySelectorAll('.section-content');
@@ -823,7 +787,6 @@ if ($patients_result->num_rows > 0) {
                 });
             });
 
-            // Handle URL hash for direct access (e.g., dasboard-admin.php#patient-data)
             const initialHash = window.location.hash.substring(1);
             if (initialHash) {
                 const initialTarget = document.querySelector(`.sidebar-link[data-target="${initialHash}"]`);

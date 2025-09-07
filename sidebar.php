@@ -1,14 +1,12 @@
 <?php
-// Tentukan tautan aktif berdasarkan variabel $currentPage yang akan di-include
 $dashboard_active = ($currentPage === 'dashboard') ? 'active' : '';
 $patient_active = ($currentPage === 'patient') ? 'active' : '';
+$user_management_active = ($currentPage === 'user_management') ? 'active' : '';
 $stats_active = ($currentPage === 'stats') ? 'active' : '';
 $profile_active = ($currentPage === 'profile') ? 'active' : '';
 
-// Tentukan tautan dashboard berdasarkan peran pengguna
 $dashboard_link = ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php';
 
-// Tentukan judul dan ikon sidebar berdasarkan peran
 if ($_SESSION['role'] === 'admin') {
     $sidebar_title = 'Admin Panel';
     $sidebar_icon = 'fas fa-user-shield';
@@ -34,6 +32,11 @@ if ($_SESSION['role'] === 'admin') {
                 <i class="fas fa-users"></i> Data Pasien
             </a>
         </li>
+        <li>
+            <a href="user_management.php" class="sidebar-link <?php echo $user_management_active; ?>">
+                <i class="fas fa-users-cog"></i> Manajemen Pengguna
+            </a>
+        </li>
         <?php endif; ?>
         <li>
             <a href="statistics.php" class="sidebar-link <?php echo $stats_active; ?>">
@@ -48,7 +51,8 @@ if ($_SESSION['role'] === 'admin') {
     </ul>
     <ul class="components">
         <li>
-            <a href="logout.php" class="sidebar-link logout-link"> <i class="fas fa-sign-out-alt"></i> Logout
+            <a href="logout.php" class="sidebar-link">
+                <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </li>
     </ul>

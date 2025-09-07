@@ -1,30 +1,42 @@
 <?php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
 $message = '';
 $error_message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];
+    // Sanitasi input email
+    $email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
 
-    // Cari user berdasarkan email
-    $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = "Format email tidak valid.";
+    } else {
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        $user_id = $user['id'];
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            $user_id = $user['id'];
 
-        // Hasilkan token unik dan atur kadaluarsa (misal 1 jam dari sekarang)
-        $token = bin2hex(random_bytes(32)); // Token acak 64 karakter
-        $expires = date("Y-m-d H:i:s", strtotime('+1 hour'));
+            $token = bin2hex(random_bytes(32));
+            $expires = date("Y-m-d H:i:s", strtotime('+1 hour'));
 
-        // Simpan token dan kadaluarsa di database
-        $update_stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
-        $update_stmt->bind_param("ssi", $token, $expires, $user_id);
-        
+            $update_stmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?");
+            $update_stmt->bind_param("ssi", $token, $expires, $user_id);
+            
+            // Logika untuk mengirim email dengan token reset di sini
+            // Untuk contoh ini, kita hanya akan menampilkan token
+            if ($update_stmt->execute()) {
+                $message = "Link reset password telah dikirim ke email Anda. Gunakan token ini: " . $token;
+            } else {
+                $error_message = "Terjadi kesalahan saat mengirim link reset.";
+            }
+
+        } else {
+            $error_message = "Email tidak terdaftar.";
+        }
     }
 }
 ?>

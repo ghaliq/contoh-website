@@ -1,5 +1,5 @@
 <?php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
 $message = '';
 $error_message = '';
@@ -7,9 +7,8 @@ $token_valid = false;
 $user_id = null;
 
 if (isset($_GET['token'])) {
-    $token = $_GET['token'];
-
-    // Cari user berdasarkan token dan pastikan belum kadaluarsa
+    $token = htmlspecialchars(trim($_GET['token']));
+    
     $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_expires > NOW()");
     $stmt->bind_param("s", $token);
     $stmt->execute();
@@ -23,11 +22,10 @@ if (isset($_GET['token'])) {
         $error_message = "Token reset password tidak valid atau sudah kadaluarsa.";
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['token'];
+    $token = htmlspecialchars(trim($_POST['token']));
     $new_password = $_POST['new_password'];
     $confirm_new_password = $_POST['confirm_new_password'];
 
-    // Verifikasi kembali token sebelum update password
     $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_expires > NOW()");
     $stmt->bind_param("s", $token);
     $stmt->execute();
@@ -40,16 +38,16 @@ if (isset($_GET['token'])) {
 
         if ($new_password !== $confirm_new_password) {
             $error_message = "Password baru dan konfirmasi password tidak cocok.";
-        } elseif (strlen($new_password) < 6) { // Contoh: minimal 6 karakter
-            $error_message = "Password baru minimal 6 karakter.";
+        } elseif (strlen($new_password) < 8 || !preg_match("#[0-9]+#", $new_password) || !preg_match("#[a-zA-Z]+#", $new_password) || !preg_match("/[^\w\d\s]/", $new_password)) {
+            $error_message = "Password baru minimal 8 karakter dan mengandung huruf, angka, dan simbol.";
         } else {
             $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
-            // Update password dan hapus token reset
             $update_stmt = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
             $update_stmt->bind_param("si", $hashed_password, $user_id);
             
             if ($update_stmt->execute()) {
+                session_regenerate_id(true);
                 $message = "Password Anda berhasil diatur ulang. Silakan <a href='login.php'>Login</a>.";
             } else {
                 $error_message = "Terjadi kesalahan saat mengatur ulang password.";

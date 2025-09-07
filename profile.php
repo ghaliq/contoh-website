@@ -1,7 +1,6 @@
 <?php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
-// Autentikasi: Hanya user yang login yang bisa mengakses
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
@@ -11,7 +10,6 @@ $user_id = $_SESSION['user_id'];
 $message = '';
 $error_message = '';
 
-// Ambil data user dari database
 $stmt = $conn->prepare("SELECT username, email, password FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -19,19 +17,26 @@ $result = $stmt->get_result();
 $user_data = $result->fetch_assoc();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_username = $_POST['username'];
-    $new_email = $_POST['email'];
-    $current_password = $_POST['current_password']; // Untuk verifikasi saat ganti password/email
+    // Sanitasi input
+    $new_username = htmlspecialchars(trim($_POST['username']));
+    $new_email = filter_var(trim($_POST['email']), FILTER_SANITIZE_EMAIL);
+    $current_password = $_POST['current_password'];
     $new_password = $_POST['new_password'];
     $confirm_new_password = $_POST['confirm_new_password'];
 
-    // Verifikasi password saat ini
-    if (!password_verify($current_password, $user_data['password'])) {
+    // Verifikasi password saat ini dan validasi input
+    if (empty($current_password) || !password_verify($current_password, $user_data['password'])) {
         $error_message = "Password saat ini salah.";
+    } elseif (empty($new_username) || empty($new_email)) {
+        $error_message = "Nama lengkap dan email tidak boleh kosong.";
+    } elseif (!filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = "Format email tidak valid.";
     } else {
+        $is_profile_updated = false;
+        $is_password_updated = false;
+
         // Update Nama dan Email
         if ($new_username !== $user_data['username'] || $new_email !== $user_data['email']) {
-            // Cek duplikasi email baru (jika diubah)
             if ($new_email !== $user_data['email']) {
                 $check_email_stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
                 $check_email_stmt->bind_param("si", $new_email, $user_id);
@@ -46,10 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update_profile_stmt = $conn->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
                 $update_profile_stmt->bind_param("ssi", $new_username, $new_email, $user_id);
                 if ($update_profile_stmt->execute()) {
-                    $_SESSION['username'] = $new_username; // Update sesi
-                    $_SESSION['email'] = $new_email; // Update sesi
+                    $is_profile_updated = true;
+                    $_SESSION['username'] = $new_username;
+                    $_SESSION['email'] = $new_email;
                     $message .= "Profil berhasil diperbarui. ";
-                    // Refresh data user setelah update
                     $stmt->execute();
                     $user_data = $stmt->get_result()->fetch_assoc();
                 } else {
@@ -62,15 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!empty($new_password)) {
             if ($new_password !== $confirm_new_password) {
                 $error_message .= "Password baru dan konfirmasi password tidak cocok.";
-            } elseif (strlen($new_password) < 6) { // Contoh: minimal 6 karakter
-                $error_message .= "Password baru minimal 6 karakter.";
+            } elseif (strlen($new_password) < 8 || !preg_match("#[0-9]+#", $new_password) || !preg_match("#[a-zA-Z]+#", $new_password) || !preg_match("/[^\w\d\s]/", $new_password)) {
+                $error_message .= "Password baru minimal 8 karakter dan mengandung huruf, angka, dan simbol.";
             } else {
                 $hashed_new_password = password_hash($new_password, PASSWORD_DEFAULT);
                 $update_password_stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
                 $update_password_stmt->bind_param("si", $hashed_new_password, $user_id);
                 if ($update_password_stmt->execute()) {
+                    $is_password_updated = true;
                     $message .= "Password berhasil diperbarui. ";
-                    // Refresh data user setelah update
                     $stmt->execute();
                     $user_data = $stmt->get_result()->fetch_assoc();
                 } else {
@@ -79,12 +84,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        if ($is_profile_updated || $is_password_updated) {
+            session_regenerate_id(true);
+        }
+
         if (empty($message) && empty($error_message)) {
             $error_message = "Tidak ada perubahan yang disimpan.";
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -162,22 +172,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transform: translateX(5px);
         }
 
-        /* Gaya khusus untuk tombol logout */
-        #sidebar ul li a.logout-link {
-            background: linear-gradient(45deg, #dc3545, #b82c3b); /* Red gradient */
-            color: white; /* White text */
-            padding: 10px 15px; /* Same padding as other links */
-            border-radius: 8px; /* Same border radius */
-            font-weight: bold; /* Make text bold */
-        }
-
-        #sidebar ul li a.logout-link:hover {
-            background: linear-gradient(45deg, #b82c3b, #dc3545); /* Slightly darker/different red on hover */
-            transform: translateX(5px); /* Keep the slide effect */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
-        }
-
-
         #sidebar ul li a i {
             margin-right: 10px;
         }
@@ -241,7 +235,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: 600;
         }
 
-        /* Responsive: sidebar fixed di kiri, konten geser ke kanan */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
