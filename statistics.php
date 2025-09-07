@@ -15,29 +15,50 @@ $selected_month = isset($_GET['month']) ? (int)$_GET['month'] : $current_month;
 $selected_year = isset($_GET['year']) ? (int)$_GET['year'] : $current_year;
 
 // Ambil data historis dari database berdasarkan bulan dan tahun yang dipilih
-$historical_data_query = $conn->prepare("
-    SELECT 
-        k.name AS kecamatan_name,
-        rdd.record_date,
-        rdd.temperature,
-        rdd.humidity,
-        rdd.risk_level
-    FROM 
-        region_daily_data rdd
-    JOIN 
-        kecamatan k ON rdd.kecamatan_id = k.id
-    WHERE 
-        YEAR(rdd.record_date) = ? AND MONTH(rdd.record_date) = ? AND k.name != 'Pontianak Barat Daya'
-    ORDER BY 
-        k.name, rdd.record_date ASC
-");
-$historical_data_query->bind_param("ii", $selected_year, $selected_month);
+if ($selected_month == 0) { // Jika "Semua Bulan" dipilih
+    $historical_data_query = $conn->prepare("
+        SELECT 
+            k.name AS kecamatan_name,
+            rdd.record_date,
+            rdd.temperature,
+            rdd.humidity,
+            rdd.risk_level
+        FROM 
+            region_daily_data rdd
+        JOIN 
+            kecamatan k ON rdd.kecamatan_id = k.id
+        WHERE 
+            YEAR(rdd.record_date) = ? AND k.name != 'Pontianak Barat Daya'
+        ORDER BY 
+            rdd.record_date ASC, k.name
+    ");
+    $historical_data_query->bind_param("i", $selected_year);
+} else {
+    $historical_data_query = $conn->prepare("
+        SELECT 
+            k.name AS kecamatan_name,
+            rdd.record_date,
+            rdd.temperature,
+            rdd.humidity,
+            rdd.risk_level
+        FROM 
+            region_daily_data rdd
+        JOIN 
+            kecamatan k ON rdd.kecamatan_id = k.id
+        WHERE 
+            YEAR(rdd.record_date) = ? AND MONTH(rdd.record_date) = ? AND k.name != 'Pontianak Barat Daya'
+        ORDER BY 
+            rdd.record_date ASC, k.name
+    ");
+    $historical_data_query->bind_param("ii", $selected_year, $selected_month);
+}
 $historical_data_query->execute();
 $historical_result = $historical_data_query->get_result();
 
 $chart_data = [];
 $kecamatan_names = [];
 $all_dates = [];
+$date_to_month = [];
 
 while ($row = $historical_result->fetch_assoc()) {
     $kecamatan_name = $row['kecamatan_name'];
@@ -50,6 +71,7 @@ while ($row = $historical_result->fetch_assoc()) {
 
     if (!in_array($record_date, $all_dates)) {
         $all_dates[] = $record_date;
+        $date_to_month[$record_date] = (int)date("n", strtotime($record_date));
     }
     
     // Siapkan data untuk diagram
@@ -74,6 +96,7 @@ while ($row = $historical_result->fetch_assoc()) {
 }
 
 sort($all_dates);
+sort($kecamatan_names);
 
 // Lengkapi data untuk Chart.js agar semua dataset memiliki panjang yang sama
 $final_chart_datasets = [];
@@ -97,13 +120,33 @@ foreach ($kecamatan_names as $name) {
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
+$json_date_to_month = json_encode($date_to_month);
 
 // Daftar bulan dan tahun untuk dropdown
 $months = [
+    0 => 'Semua Bulan',
     1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
     7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
 $years = range(date("Y"), date("Y") - 5);
+
+// Array warna untuk setiap bulan
+$month_colors = [
+    1 => '#A52A2A', // Coklat
+    2 => '#DAA520', // Kuning Emas
+    3 => '#483D8B', // Biru Tua
+    4 => '#228B22', // Hijau Hutan
+    5 => '#B22222', // Merah Batu Bata
+    6 => '#FF7F50', // Karang
+    7 => '#6495ED', // Biru Jagung
+    8 => '#FFD700', // Emas
+    9 => '#9ACD32', // Kuning Hijau
+    10 => '#8A2BE2', // Biru Violet
+    11 => '#D2691E', // Coklat Cokelat
+    12 => '#008B8B'  // Hijau Biru Tua
+];
+$json_month_colors = json_encode($month_colors);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -269,6 +312,41 @@ $years = range(date("Y"), date("Y") - 5);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
 
+        .month-legend {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        .month-legend h6 {
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .month-legend ul {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .month-legend li {
+            display: flex;
+            align-items: center;
+            margin: 5px 15px;
+            font-size: 0.9rem;
+        }
+        .month-legend span {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -338,6 +416,19 @@ $years = range(date("Y"), date("Y") - 5);
                         Belum ada data historis yang tersedia untuk ditampilkan pada periode ini.
                     </div>
                 <?php else: ?>
+                    <?php if ($selected_month == 0): ?>
+                    <div class="month-legend">
+                        <h6>Legenda Warna Bulan</h6>
+                        <ul>
+                            <?php foreach ($months as $num => $name): ?>
+                                <?php if ($num > 0): ?>
+                                <li><span style="background-color: <?php echo $month_colors[$num]; ?>;"></span><?php echo $name; ?></li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="row">
                         <?php foreach ($kecamatan_names as $kecamatan): ?>
                         <div class="col-lg-12">
@@ -366,7 +457,10 @@ $years = range(date("Y"), date("Y") - 5);
         const allDates = <?php echo $json_all_dates; ?>;
         const chartDatasets = <?php echo $json_chart_datasets; ?>;
         const kecamatanNames = <?php echo $json_kecamatan_names; ?>;
-
+        const dateToMonth = <?php echo $json_date_to_month; ?>;
+        const monthColors = <?php echo $json_month_colors; ?>;
+        const isMonthlyView = <?php echo json_encode($selected_month != 0); ?>;
+        
         function getRiskLevelColor(value) {
             if (value === 3) return '#dc3545';
             if (value === 2) return '#ffc107';
@@ -387,15 +481,20 @@ $years = range(date("Y"), date("Y") - 5);
                         datasets: [{
                             label: 'Tingkat Risiko',
                             data: data.risk_levels,
-                            borderColor: getRiskLevelColor(data.risk_levels[data.risk_levels.length - 1]),
-                            backgroundColor: getRiskLevelColor(data.risk_levels[data.risk_levels.length - 1]),
-                            fill: false,
-                            tension: 0.1,
                             pointRadius: 5,
                             pointBackgroundColor: data.risk_levels.map(value => getRiskLevelColor(value)),
                             pointBorderColor: 'white',
                             pointBorderWidth: 2,
-                            spanGaps: true
+                            spanGaps: true,
+                            segment: {
+                                borderColor: (ctx) => {
+                                    if (isMonthlyView) {
+                                        return monthColors[dateToMonth[ctx.p0.label]] || '#6c757d';
+                                    } else {
+                                        return monthColors[dateToMonth[ctx.p0.label]] || '#6c757d';
+                                    }
+                                }
+                            }
                         }]
                     },
                     options: {
