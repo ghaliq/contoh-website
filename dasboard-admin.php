@@ -24,28 +24,28 @@ function getWeatherData($lat, $lon, $api_key) {
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
     
-    // Faktor suhu (optimal 25-30°C)
+    // Faktor suhu (optimal 25–30°C)
     if ($temp >= 25 && $temp <= 30) {
         $risk_score += 3;
-    } elseif ($temp >= 20 && $temp <= 35) {
+    } elseif (($temp >= 20 && $temp < 25) || ($temp > 30 && $temp <= 35)) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
     }
-    
-    // Faktor kelembaban (optimal 70-90%)
+
+    // Faktor kelembaban (optimal 70–90%)
     if ($humidity >= 70 && $humidity <= 90) {
         $risk_score += 3;
-    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) {
+    } elseif (($humidity >= 50 && $humidity < 70) || ($humidity > 90 && $humidity <= 100)) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
     }
-    
-    // Faktor curah hujan (optimal 100-300mm)
+
+    // Faktor curah hujan (optimal 100–300 mm)
     if ($rainfall >= 100 && $rainfall <= 300) {
         $risk_score += 3;
-    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) {
+    } elseif (($rainfall > 50 && $rainfall < 100) || ($rainfall > 300 && $rainfall <= 500)) {
         $risk_score += 2;
     } else {
         $risk_score += 1;
@@ -512,7 +512,7 @@ if ($patients_result->num_rows > 0) {
     <div id="content">
         <div class="header">
             <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
-            <p>Sistem Monitoring Demam Berdarah - Kota Pontianak</p>
+            <p>Sistem Monitoring Demam Berdarah Dungue - Kota Pontianak</p>
         </div>
 
         <div class="city-info"> <h5><i class="fas fa-map-marker-alt"></i> Kota Pontianak, Kalimantan Barat</h5>

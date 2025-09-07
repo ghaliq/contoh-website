@@ -27,43 +27,41 @@ function getWeatherData($lat, $lon, $api_key) {
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
     
-    // Faktor suhu (optimal 25-30°C)
+    // Faktor suhu (optimal 25–30°C)
     if ($temp >= 25 && $temp <= 30) {
-        $risk_score += 3; // Highest risk contribution for optimal temperature
-    } elseif ($temp >= 20 && $temp <= 35) {
-        $risk_score += 2; // Medium risk contribution for slightly outside optimal
+        $risk_score += 3;
+    } elseif (($temp >= 20 && $temp < 25) || ($temp > 30 && $temp <= 35)) {
+        $risk_score += 2;
     } else {
-        $risk_score += 1; // Lowest risk contribution for temperatures far from optimal
-    }
-    
-    // Faktor kelembaban (optimal 70-90%)
-    if ($humidity >= 70 && $humidity <= 90) {
-        $risk_score += 3; // Highest risk contribution for optimal humidity
-    } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) { // Above 90% or between 60% and 70%
-        $risk_score += 2; // Medium risk contribution
-    } else {
-        $risk_score += 1; // Lowest risk contribution (below 60%)
-    }
-    
-    // Faktor curah hujan (optimal 100-300mm)
-    if ($rainfall >= 100 && $rainfall <= 300) {
-        $risk_score += 3; // Highest risk contribution for optimal rainfall
-    } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) { // Above 300mm or between 50mm and 100mm
-        $risk_score += 2; // Medium risk contribution
-    } else {
-        $risk_score += 1; // Lowest risk contribution (below 50mm)
-    }
-    
-    // Rentang kepadatan penduduk yang diobservasi di Kota Pontianak: 3.041 - 9.268 jiwa/km²
-    if ($population_density > 7500) {
-        $risk_score += 3; // Kontribusi risiko TERTINGGI (untuk kepadatan sangat tinggi)
-    } elseif ($population_density >= 4000 && $population_density <= 7500) {
-        $risk_score += 2; // Kontribusi risiko SEDANG (untuk kepadatan menengah)
-    } else { // $population_density < 4000
-        $risk_score += 1; // Kontribusi risiko RENDAH (untuk kepadatan rendah)
+        $risk_score += 1;
     }
 
+    // Faktor kelembaban (optimal 70–90%)
+    if ($humidity >= 70 && $humidity <= 90) {
+        $risk_score += 3;
+    } elseif (($humidity >= 50 && $humidity < 70) || ($humidity > 90 && $humidity <= 100)) {
+        $risk_score += 2;
+    } else {
+        $risk_score += 1;
+    }
+
+    // Faktor curah hujan (optimal 100–300 mm)
+    if ($rainfall >= 100 && $rainfall <= 300) {
+        $risk_score += 3;
+    } elseif (($rainfall > 50 && $rainfall < 100) || ($rainfall > 300 && $rainfall <= 500)) {
+        $risk_score += 2;
+    } else {
+        $risk_score += 1;
+    }
     
+    // Faktor kepadatan penduduk (optimal >8000 per km²)
+    if ($population_density > 8000) {
+    $risk_score += 3;
+    } elseif ($population_density >= 4000 && $population_density < 8000) {
+    $risk_score += 2;
+    } elseif ($population_density < 4000) {
+    $risk_score += 1;
+}
     // Kategorisasi risiko
     if ($risk_score >= 10) return 'Tinggi';
     elseif ($risk_score >= 7) return 'Sedang';
@@ -451,9 +449,8 @@ if ($patients_result->num_rows > 0) {
     <div id="content">
         <div class="main-content-area">
             <div class="header">
-                <h1><i class="fas fa-bug"></i> Monitoring Kerawanan Demam Berdarah</h1>
+                <h1><i class="fas fa-bug"></i> Sistem Monitoring Demam Berdarah Dungue - Kota Pontianak</h1>
                 <p>Sistem Pemantauan Real-time Kota Pontianak</p>
-                <p>Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>!</p>
             </div>
             
             <div class="city-info">
@@ -468,7 +465,7 @@ if ($patients_result->num_rows > 0) {
                 
                 <div class="col-lg-4">
                     <div class="legend">
-                        <h5>**Legenda Tingkat Risiko**</h5>
+                        <h5>Legenda Tingkat Risiko</h5>
                         <div class="legend-item">
                             <div class="legend-color" style="background-color: #D32F2F;"></div> <span>Risiko Tinggi</span>
                         </div>
@@ -485,7 +482,7 @@ if ($patients_result->num_rows > 0) {
                     </div>
                     
                     <div class="control-panel">
-                        <h5>**Panel Kontrol**</h5>
+                        <h5>Panel Kontrol</h5>
                         <button class="btn btn-custom btn-sm mb-2" onclick="togglePatients()">
                             <i class="fas fa-user-injured"></i> Toggle Pasien
                         </button>
