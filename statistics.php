@@ -1,5 +1,5 @@
 <?php
-include 'db.php'; // Memasukkan koneksi database dan memulai sesi
+include 'db.php';
 
 // Autentikasi: Hanya user yang login yang bisa mengakses
 if (!isset($_SESSION['user_id'])) {
@@ -7,13 +7,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Mengambil data historis dari database
-// Kita akan ambil data untuk 30 hari terakhir sebagai contoh
-$data_limit_days = 30; // Atau bisa disesuaikan lewat input form di masa depan
-$start_date = date("Y-m-d", strtotime("-{$data_limit_days} days"));
-$end_date = date("Y-m-d");
+// Ambil bulan dan tahun dari URL, atau gunakan bulan/tahun saat ini sebagai default
+$current_month = date("n"); // Bulan tanpa nol di depan (1-12)
+$current_year = date("Y");
 
-// Query dimodifikasi untuk hanya mengambil 5 kecamatan selain 'Pontianak Barat Daya'
+$selected_month = isset($_GET['month']) ? (int)$_GET['month'] : $current_month;
+$selected_year = isset($_GET['year']) ? (int)$_GET['year'] : $current_year;
+
+// Ambil data historis dari database berdasarkan bulan dan tahun yang dipilih
 $historical_data_query = $conn->prepare("
     SELECT 
         k.name AS kecamatan_name,
@@ -26,16 +27,17 @@ $historical_data_query = $conn->prepare("
     JOIN 
         kecamatan k ON rdd.kecamatan_id = k.id
     WHERE 
-        rdd.record_date BETWEEN ? AND ? AND k.name != 'Pontianak Barat Daya'
+        YEAR(rdd.record_date) = ? AND MONTH(rdd.record_date) = ? AND k.name != 'Pontianak Barat Daya'
     ORDER BY 
         k.name, rdd.record_date ASC
 ");
-$historical_data_query->bind_param("ss", $start_date, $end_date);
+$historical_data_query->bind_param("ii", $selected_year, $selected_month);
 $historical_data_query->execute();
 $historical_result = $historical_data_query->get_result();
 
-$chart_data = []; // Akan menyimpan data yang diformat untuk Chart.js
-$kecamatan_names = []; // Untuk menyimpan daftar nama kecamatan
+$chart_data = [];
+$kecamatan_names = [];
+$all_dates = [];
 
 while ($row = $historical_result->fetch_assoc()) {
     $kecamatan_name = $row['kecamatan_name'];
@@ -46,30 +48,31 @@ while ($row = $historical_result->fetch_assoc()) {
         $kecamatan_names[] = $kecamatan_name;
     }
 
+    if (!in_array($record_date, $all_dates)) {
+        $all_dates[] = $record_date;
+    }
+    
     // Siapkan data untuk diagram
+    if (!isset($chart_data[$kecamatan_name])) {
+        $chart_data[$kecamatan_name] = [
+            'dates' => [],
+            'risk_levels' => []
+        ];
+    }
+    
     $chart_data[$kecamatan_name]['dates'][] = $record_date;
     
-    // Konversi tingkat risiko ke nilai numerik untuk diagram
     $risk_numeric = 0;
     switch ($risk_level) {
         case 'Tinggi': $risk_numeric = 3; break;
         case 'Sedang': $risk_numeric = 2; break;
         case 'Rendah': $risk_numeric = 1; break;
-        default: $risk_numeric = 0; // 'Tidak Ada Data'
+        default: $risk_numeric = 0;
     }
     $chart_data[$kecamatan_name]['risk_levels'][] = $risk_numeric;
 }
 
-// Untuk memastikan semua kecamatan memiliki semua tanggal, bahkan jika data kosong
-$all_dates = [];
-foreach ($chart_data as $data) {
-    foreach ($data['dates'] as $date) {
-        if (!in_array($date, $all_dates)) {
-            $all_dates[] = $date;
-        }
-    }
-}
-sort($all_dates); // Urutkan tanggal
+sort($all_dates);
 
 // Lengkapi data untuk Chart.js agar semua dataset memiliki panjang yang sama
 $final_chart_datasets = [];
@@ -81,7 +84,6 @@ foreach ($kecamatan_names as $name) {
         if ($index !== false) {
             $risk_data[] = $chart_data[$name]['risk_levels'][$index];
         } else {
-            // Jika data tidak ada untuk tanggal ini, gunakan null atau 0
             $risk_data[] = null;
         }
     }
@@ -90,11 +92,16 @@ foreach ($kecamatan_names as $name) {
     ];
 }
 
-// Konversi data PHP ke JSON untuk JavaScript
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
 
+// Daftar bulan dan tahun untuk dropdown
+$months = [
+    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+    7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+];
+$years = range(date("Y"), date("Y") - 5);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -172,21 +179,6 @@ $json_kecamatan_names = json_encode($kecamatan_names);
         #sidebar ul li a.active {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
-        }
-
-        /* Gaya khusus untuk tombol logout */
-        #sidebar ul li a.logout-link {
-            background: linear-gradient(45deg, #dc3545, #b82c3b); /* Red gradient */
-            color: white; /* White text */
-            padding: 10px 15px; /* Same padding as other links */
-            border-radius: 8px; /* Same border radius */
-            font-weight: bold; /* Make text bold */
-        }
-
-        #sidebar ul li a.logout-link:hover {
-            background: linear-gradient(45deg, #b82c3b, #dc3545); /* Slightly darker/different red on hover */
-            transform: translateX(5px); /* Keep the slide effect */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
         }
 
         #sidebar ul li a i {
@@ -267,6 +259,13 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             margin-right: 5px;
             border-radius: 3px;
         }
+        .filter-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
 
         /* Responsive: sidebar jadi fixed, konten geser ke kanan */
         @media (max-width: 768px) {
@@ -300,13 +299,42 @@ $json_kecamatan_names = json_encode($kecamatan_names);
             <div class="container-fluid">
                 <div class="header">
                     <h1><i class="fas fa-chart-bar"></i> Statistik Kerawanan DBD Historis</h1>
-                    <p>Data Tingkat Risiko per Kecamatan (<?php echo $data_limit_days; ?> Hari Terakhir)</p>
+                    <p>Data Tingkat Risiko per Kecamatan</p>
                     <p><a href="<?php echo ($_SESSION['role'] === 'admin') ? 'dasboard-admin.php' : 'index.php'; ?>" class="btn btn-sm btn-light"><i class="fas fa-arrow-left"></i> Kembali ke Dashboard</a> | Selamat datang, <?php echo htmlspecialchars($_SESSION['username']); ?>! | <a href="logout.php" class="btn btn-sm btn-danger">Logout</a></p>
                 </div>
-
+                
+                <div class="filter-container">
+                    <form method="get" class="row g-3 align-items-center justify-content-center">
+                        <div class="col-auto">
+                            <label for="month" class="form-label">Bulan</label>
+                            <select name="month" id="month" class="form-select">
+                                <?php foreach ($months as $num => $name): ?>
+                                    <option value="<?php echo $num; ?>" <?php echo ($selected_month == $num) ? 'selected' : ''; ?>>
+                                        <?php echo $name; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <label for="year" class="form-label">Tahun</label>
+                            <select name="year" id="year" class="form-select">
+                                <?php foreach ($years as $year): ?>
+                                    <option value="<?php echo $year; ?>" <?php echo ($selected_year == $year) ? 'selected' : ''; ?>>
+                                        <?php echo $year; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-auto mt-4">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+                            <a href="download_stats.php?month=<?php echo $selected_month; ?>&year=<?php echo $selected_year; ?>" class="btn btn-success"><i class="fas fa-download"></i> Download CSV</a>
+                        </div>
+                    </form>
+                </div>
+                
                 <?php if (empty($all_dates) || empty($kecamatan_names)): ?>
                     <div class="alert alert-info text-center" role="alert">
-                        Belum ada data historis yang tersedia untuk ditampilkan.
+                        Belum ada data historis yang tersedia untuk ditampilkan pada periode ini.
                     </div>
                 <?php else: ?>
                     <div class="row">
@@ -339,17 +367,16 @@ $json_kecamatan_names = json_encode($kecamatan_names);
         const kecamatanNames = <?php echo $json_kecamatan_names; ?>;
 
         function getRiskLevelColor(value) {
-            if (value === 3) return '#dc3545'; // Tinggi
-            if (value === 2) return '#ffc107'; // Sedang
-            if (value === 1) return '#28a745'; // Rendah
-            return '#6c757d'; // Tidak Ada Data atau null
+            if (value === 3) return '#dc3545';
+            if (value === 2) return '#ffc107';
+            if (value === 1) return '#28a745';
+            return '#6c757d';
         }
 
         kecamatanNames.forEach(kecamatan => {
             const safeKecamatanName = kecamatan.replace(/ /g, '_');
             const data = chartDatasets[kecamatan];
 
-            // Diagram Risiko
             const riskCtx = document.getElementById(`riskChart_${safeKecamatanName}`);
             if (riskCtx) {
                 new Chart(riskCtx, {
