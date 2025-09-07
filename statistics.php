@@ -489,9 +489,11 @@ $json_month_colors = json_encode($month_colors);
                             segment: {
                                 borderColor: (ctx) => {
                                     if (isMonthlyView) {
-                                        return monthColors[dateToMonth[ctx.p0.label]] || '#6c757d';
+                                        return 'gray'; // Gunakan satu warna jika hanya satu bulan yang dilihat
                                     } else {
-                                        return monthColors[dateToMonth[ctx.p0.label]] || '#6c757d';
+                                        const date = ctx.p0.label;
+                                        const month = dateToMonth[date];
+                                        return monthColors[month] || '#6c757d';
                                     }
                                 }
                             }
