@@ -121,6 +121,7 @@ $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
 $json_date_to_month = json_encode($date_to_month);
+$json_selected_month = json_encode($selected_month);
 
 // Daftar bulan dan tahun untuk dropdown
 $months = [
@@ -146,6 +147,7 @@ $month_colors = [
     12 => '#008B8B'  // Hijau Biru Tua
 ];
 $json_month_colors = json_encode($month_colors);
+$is_all_months_view = ($selected_month == 0);
 
 ?>
 <!DOCTYPE html>
@@ -416,7 +418,7 @@ $json_month_colors = json_encode($month_colors);
                         Belum ada data historis yang tersedia untuk ditampilkan pada periode ini.
                     </div>
                 <?php else: ?>
-                    <?php if ($selected_month == 0): ?>
+                    <?php if ($is_all_months_view): ?>
                     <div class="month-legend">
                         <h6>Legenda Warna Bulan</h6>
                         <ul>
@@ -459,7 +461,7 @@ $json_month_colors = json_encode($month_colors);
         const kecamatanNames = <?php echo $json_kecamatan_names; ?>;
         const dateToMonth = <?php echo $json_date_to_month; ?>;
         const monthColors = <?php echo $json_month_colors; ?>;
-        const isMonthlyView = <?php echo json_encode($selected_month != 0); ?>;
+        const isAllMonthsView = <?php echo json_encode($is_all_months_view); ?>;
         
         function getRiskLevelColor(value) {
             if (value === 3) return '#dc3545';
@@ -472,32 +474,39 @@ $json_month_colors = json_encode($month_colors);
             const safeKecamatanName = kecamatan.replace(/ /g, '_');
             const data = chartDatasets[kecamatan];
 
+            const datasetConfig = {
+                label: 'Tingkat Risiko',
+                data: data.risk_levels,
+                pointRadius: 5,
+                pointBackgroundColor: data.risk_levels.map(value => getRiskLevelColor(value)),
+                pointBorderColor: 'white',
+                pointBorderWidth: 2,
+                spanGaps: true
+            };
+
+            if (isAllMonthsView) {
+                datasetConfig.borderColor = 'gray'; // Garis dasar abu-abu
+                datasetConfig.segment = {
+                    borderColor: (ctx) => {
+                        const date = ctx.p0.label;
+                        const month = dateToMonth[date];
+                        return monthColors[month] || '#6c757d';
+                    }
+                };
+            } else {
+                // Tampilan bulanan, ambil satu warna dari bulan yang dipilih
+                const firstDate = allDates[0];
+                const firstMonth = dateToMonth[firstDate];
+                datasetConfig.borderColor = monthColors[firstMonth] || 'gray';
+            }
+
             const riskCtx = document.getElementById(`riskChart_${safeKecamatanName}`);
             if (riskCtx) {
                 new Chart(riskCtx, {
                     type: 'line',
                     data: {
                         labels: allDates,
-                        datasets: [{
-                            label: 'Tingkat Risiko',
-                            data: data.risk_levels,
-                            pointRadius: 5,
-                            pointBackgroundColor: data.risk_levels.map(value => getRiskLevelColor(value)),
-                            pointBorderColor: 'white',
-                            pointBorderWidth: 2,
-                            spanGaps: true,
-                            segment: {
-                                borderColor: (ctx) => {
-                                    if (isMonthlyView) {
-                                        return 'gray'; // Gunakan satu warna jika hanya satu bulan yang dilihat
-                                    } else {
-                                        const date = ctx.p0.label;
-                                        const month = dateToMonth[date];
-                                        return monthColors[month] || '#6c757d';
-                                    }
-                                }
-                            }
-                        }]
+                        datasets: [datasetConfig]
                     },
                     options: {
                         responsive: true,
