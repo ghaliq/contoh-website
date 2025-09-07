@@ -1,5 +1,5 @@
-<?php
-include 'db.php';
+<?php 
+include 'db.php'; 
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
@@ -19,7 +19,7 @@ function getWeatherData($lat, $lon, $api_key) {
 
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
-
+    
     if ($temp >= 25 && $temp <= 30) {
         $risk_score += 3;
     } elseif ($temp >= 20 && $temp <= 35) {
@@ -27,7 +27,7 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     } else {
         $risk_score += 1;
     }
-
+    
     if ($humidity >= 70 && $humidity <= 90) {
         $risk_score += 3;
     } elseif ($humidity > 90 || ($humidity >= 60 && $humidity < 70)) {
@@ -35,7 +35,7 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     } else {
         $risk_score += 1;
     }
-
+    
     if ($rainfall >= 100 && $rainfall <= 300) {
         $risk_score += 3;
     } elseif ($rainfall > 300 || ($rainfall > 50 && $rainfall < 100)) {
@@ -43,7 +43,7 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     } else {
         $risk_score += 1;
     }
-
+    
     if ($population_density >= 4000 && $population_density <= 8000) {
         $risk_score += 3;
     } elseif ($population_density > 8000 || ($population_density > 2000 && $population_density < 4000)) {
@@ -51,7 +51,7 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     } else {
         $risk_score += 1;
     }
-
+    
     if ($risk_score >= 10) return 'Tinggi';
     elseif ($risk_score >= 7) return 'Sedang';
     else return 'Rendah';
@@ -70,12 +70,12 @@ $today = date("Y-m-d");
 
 foreach ($regions as &$region) {
     $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
-    $current_rainfall = 0; // Mengubah inisialisasi ke 0
+    $current_rainfall = 0;
 
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
-
+        
         if (isset($weather['rain']['1h'])) {
             $current_rainfall = $weather['rain']['1h'];
         }
@@ -84,10 +84,9 @@ foreach ($regions as &$region) {
         $region['humidity'] = rand(75, 90);
     }
     
-    // Curah hujan yang digunakan sekarang adalah $current_rainfall (dari API atau 0)
     $region['risk_level'] = calculateRiskLevel(
-        $region['temp'],
-        $region['humidity'],
+        $region['temp'], 
+        $region['humidity'], 
         $current_rainfall,
         $region['population_density']
     );
@@ -102,11 +101,11 @@ foreach ($regions as &$region) {
             "INSERT INTO region_daily_data (kecamatan_id, record_date, temperature, humidity, risk_level) VALUES (?, ?, ?, ?, ?)"
         );
         $insert_daily_data_stmt->bind_param(
-            "isdss",
-            $region['id'],
-            $today,
-            $region['temp'],
-            $region['humidity'],
+            "isdss", 
+            $region['id'], 
+            $today, 
+            $region['temp'], 
+            $region['humidity'], 
             $region['risk_level']
         );
         $insert_daily_data_stmt->execute();
@@ -142,7 +141,7 @@ if ($patients_result->num_rows > 0) {
             min-height: 100vh;
             display: flex;
         }
-
+        
         #sidebar {
             width: 250px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
@@ -213,7 +212,7 @@ if ($patients_result->num_rows > 0) {
             overflow-y: auto;
             min-height: 100vh;
         }
-
+        
         .main-content-area {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -230,13 +229,13 @@ if ($patients_result->num_rows > 0) {
             color: white;
             border-radius: 10px;
         }
-
+        
         .header h1 {
             margin: 0;
             font-size: 2.5rem;
             font-weight: bold;
         }
-
+        
         .header p {
             margin: 10px 0 0 0;
             font-size: 1.1rem;
@@ -251,7 +250,7 @@ if ($patients_result->num_rows > 0) {
             margin-bottom: 20px;
             text-align: center;
         }
-
+        
         .table-header {
             display: flex;
             justify-content: space-between;
@@ -260,16 +259,16 @@ if ($patients_result->num_rows > 0) {
             padding-bottom: 15px;
             border-bottom: 2px solid #f8f9fa;
         }
-
+        
         .table-responsive {
             max-height: 400px;
             overflow-y: auto;
         }
-
+        
         .table {
             margin-bottom: 0;
         }
-
+        
         .table th {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             color: white;
@@ -280,24 +279,24 @@ if ($patients_result->num_rows > 0) {
             top: 0;
             z-index: 10;
         }
-
+        
         .table td {
             vertical-align: middle;
             text-align: center;
             border-color: #e9ecef;
         }
-
+        
         .table tbody tr:hover {
             background-color: #f8f9fa;
         }
-
+        
         #map {
             height: 600px;
             width: 100%;
             border-radius: 10px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-
+        
         .btn-custom {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             border: none;
@@ -306,13 +305,13 @@ if ($patients_result->num_rows > 0) {
             border-radius: 25px;
             transition: all 0.3s ease;
         }
-
+        
         .btn-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             color: white;
         }
-
+        
         .btn-add {
             background: linear-gradient(45deg, #28a745, #20c997);
             border: none;
@@ -322,13 +321,13 @@ if ($patients_result->num_rows > 0) {
             font-weight: 600;
             transition: all 0.3s ease;
         }
-
+        
         .btn-add:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
             color: white;
         }
-
+        
         .legend {
             background: white;
             padding: 15px;
@@ -336,30 +335,30 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
         }
-
+        
         .legend-item {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
-
+        
         .legend-color {
             width: 20px;
             height: 20px;
             margin-right: 10px;
             border-radius: 3px;
         }
-
+        
         .modal-header {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             color: white;
         }
-
+        
         .form-label {
             font-weight: 600;
             color: #2c5530;
         }
-
+        
         .form-control:focus {
             border-color: #2c5530;
             box-shadow: 0 0 0 0.2rem rgba(44, 85, 48, 0.25);

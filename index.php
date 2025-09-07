@@ -26,7 +26,7 @@ function getWeatherData($lat, $lon, $api_key) {
 // Fungsi untuk menghitung tingkat kerawanan
 function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     $risk_score = 0;
-
+    
     // Faktor suhu (optimal 25–30°C)
     if ($temp >= 25 && $temp <= 30) {
         $risk_score += 3;
@@ -53,7 +53,7 @@ function calculateRiskLevel($temp, $humidity, $rainfall, $population_density) {
     } else {
         $risk_score += 1;
     }
-
+    
     // Faktor kepadatan penduduk (optimal >8000 per km²)
     if ($population_density > 8000) {
     $risk_score += 3;
@@ -83,30 +83,26 @@ $today = date("Y-m-d");
 // Mengambil data cuaca untuk setiap wilayah dan menyimpan ke database
 foreach ($regions as &$region) {
     $weather = getWeatherData($region['latitude'], $region['longitude'], $openweather_api_key);
-
-    // Inisialisasi curah hujan ke 0.
-    $current_rainfall = 0;
+    
+    $current_rainfall = 0; 
 
     if (isset($weather['main'])) {
         $region['temp'] = $weather['main']['temp'];
         $region['humidity'] = $weather['main']['humidity'];
-
-        // Ambil data curah hujan per jam jika tersedia dari API
+        
         if (isset($weather['rain']['1h'])) {
-            $current_rainfall = $weather['rain']['1h'];
-        }
+            $current_rainfall = $weather['rain']['1h']; 
+        } 
 
     } else {
-        // Jika panggilan API gagal seluruhnya, gunakan data simulasi untuk suhu/kelembaban
-        // Curah hujan akan tetap 0 sesuai inisialisasi di atas
         $region['temp'] = rand(27, 33);
         $region['humidity'] = rand(75, 90);
     }
-
+    
     $region['risk_level'] = calculateRiskLevel(
-        $region['temp'],
-        $region['humidity'],
-        $current_rainfall, // Menggunakan nilai dari API (jika ada) atau 0
+        $region['temp'], 
+        $region['humidity'], 
+        $current_rainfall,
         $region['population_density']
     );
 
@@ -121,11 +117,11 @@ foreach ($regions as &$region) {
             "INSERT INTO region_daily_data (kecamatan_id, record_date, temperature, humidity, risk_level) VALUES (?, ?, ?, ?, ?)"
         );
         $insert_daily_data_stmt->bind_param(
-            "isdss",
-            $region['id'],
-            $today,
-            $region['temp'],
-            $region['humidity'],
+            "isdss", 
+            $region['id'], 
+            $today, 
+            $region['temp'], 
+            $region['humidity'], 
             $region['risk_level']
         );
         $insert_daily_data_stmt->execute();
@@ -163,7 +159,7 @@ if ($patients_result->num_rows > 0) {
             min-height: 100vh;
             display: flex;
         }
-
+        
         #sidebar {
             width: 250px;
             background: linear-gradient(180deg, #1a7037 0%, #2c5530 100%);
@@ -222,7 +218,7 @@ if ($patients_result->num_rows > 0) {
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(5px);
         }
-
+        
         /* Gaya khusus untuk tombol logout */
         #sidebar ul li a.logout-link {
             background: linear-gradient(45deg, #dc3545, #b82c3b); /* Red gradient */
@@ -250,7 +246,7 @@ if ($patients_result->num_rows > 0) {
             overflow-y: auto;
             min-height: 100vh;
         }
-
+        
         .main-content-area {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -267,19 +263,19 @@ if ($patients_result->num_rows > 0) {
             color: white;
             border-radius: 10px;
         }
-
+        
         .header h1 {
             margin: 0;
             font-size: 2.5rem;
             font-weight: bold;
         }
-
+        
         .header p {
             margin: 10px 0 0 0;
             font-size: 1.1rem;
             opacity: 0.9;
         }
-
+        
         .city-info {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             color: white;
@@ -288,7 +284,7 @@ if ($patients_result->num_rows > 0) {
             margin-bottom: 20px;
             text-align: center;
         }
-
+        
         #map {
             height: 600px;
             width: 100%;
@@ -296,7 +292,7 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             margin-bottom: 30px;
         }
-
+        
         .stats-card {
             background: white;
             border-radius: 10px;
@@ -305,11 +301,11 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             border-left: 5px solid;
         }
-
+        
         .stats-card.tinggi { border-left-color: #D32F2F; } /* Warna baru untuk Tinggi */
         .stats-card.sedang { border-left-color: #FFB300; } /* Warna baru untuk Sedang */
         .stats-card.rendah { border-left-color: #66BB6A; } /* Warna baru untuk Rendah */
-
+        
         .legend {
             background: white;
             padding: 15px;
@@ -317,20 +313,20 @@ if ($patients_result->num_rows > 0) {
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
         }
-
+        
         .legend-item {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
-
+        
         .legend-color {
             width: 20px;
             height: 20px;
             margin-right: 10px;
             border-radius: 3px;
         }
-
+        
         .control-panel {
             background: white;
             padding: 20px;
@@ -338,7 +334,7 @@ if ($patients_result->num_rows > 0) {
             margin-bottom: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
-
+        
         .btn-custom {
             background: linear-gradient(45deg, #2c5530, #1a7037);
             border: none;
@@ -347,7 +343,7 @@ if ($patients_result->num_rows > 0) {
             border-radius: 25px;
             transition: all 0.3s ease;
         }
-
+        
         .btn-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -392,7 +388,7 @@ if ($patients_result->num_rows > 0) {
             background: #999;
         }
 
-
+        
         @keyframes fadeInOut {
             0%, 100% { opacity: 0.6; transform: translateY(0); }
             50% { opacity: 1; transform: translateY(-2px); }
@@ -402,12 +398,12 @@ if ($patients_result->num_rows > 0) {
             margin-bottom: 15px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
+        
         .scrollable-stats .stats-card:hover {
             transform: translateX(3px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
-
+        
         .scrollable-stats .stats-card:last-child {
             margin-bottom: 0;
         }
@@ -449,17 +445,17 @@ if ($patients_result->num_rows > 0) {
                 <h1><i class="fas fa-bug"></i> Sistem Monitoring Demam Berdarah Dungue - Kota Pontianak</h1>
                 <p>Sistem Pemantauan Real-time Kota Pontianak</p>
             </div>
-
+            
             <div class="city-info">
                 <h5><i class="fas fa-map-marker-alt"></i> Kota Pontianak, Kalimantan Barat</h5>
                 <p>Monitoring berbasis data cuaca tropis dan kepadatan penduduk</p>
             </div>
-
+            
             <div class="row">
                 <div class="col-lg-8">
                     <div id="map"></div>
                 </div>
-
+                
                 <div class="col-lg-4">
                     <div class="legend">
                         <h5>Legenda Tingkat Risiko</h5>
@@ -477,7 +473,7 @@ if ($patients_result->num_rows > 0) {
                             <span>Lokasi Pasien</span>
                         </div>
                     </div>
-
+                    
                     <div class="control-panel">
                         <h5>Panel Kontrol</h5>
                         <button class="btn btn-custom btn-sm mb-2" onclick="togglePatients()">
@@ -497,6 +493,7 @@ if ($patients_result->num_rows > 0) {
                         </a>
                     </div>
         <div class="scrollable-stats" id="statsContainer">
+        <h5><strong>Statistik Risiko Wilayah Saat Ini</strong></h5>
         <?php
         $seen = [];
         foreach ($regions as $region):
@@ -527,25 +524,25 @@ if ($patients_result->num_rows > 0) {
     <script src="https://unpkg.com/leaflet-ajax/dist/leaflet.ajax.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
+    
     <script>
         // Inisialisasi peta dengan fokus ke Pontianak
         var map = L.map('map').setView([-0.0263, 109.3425], 12);
-
+        
         // Base map
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
-
+        
         // Data dari PHP
         var regions = <?php echo json_encode($regions); ?>;
         var patients = <?php echo json_encode($patients); ?>;
 
-
+        
         // Layer groups
         var choroplethLayer = L.layerGroup().addTo(map);
         var patientsLayer = L.layerGroup().addTo(map);
-
+        
         // Fungsi untuk mendapatkan warna berdasarkan risiko
         function getRiskColor(risk) {
             switch(risk) {
@@ -555,7 +552,7 @@ if ($patients_result->num_rows > 0) {
                 default: return '#6c757d'; // Warna default jika tidak ada data
             }
         }
-
+        
         // Fungsi untuk membuat choropleth map dari GeoJSON
         function createChoropleth() {
             choroplethLayer.clearLayers(); // Hapus layer yang ada sebelum menambahkan yang baru
@@ -610,7 +607,7 @@ if ($patients_result->num_rows > 0) {
                                 Tingkat Risiko: <span style="color:${getRiskColor(risk)}; font-weight:bold">${risk}</span><br>
                                 Suhu: ${temp}°C<br>
                                 Kelembaban: ${humidity}%<br>
-                                Curah Hujan: ${rainfall_avg_display}mm<br>
+                                Curah Hujan: ${rainfall_avg_display}mm<br> 
                                 Kepadatan Penduduk: ${population_density.toLocaleString()} jiwa/km²
                             `);
                         }
@@ -620,11 +617,11 @@ if ($patients_result->num_rows > 0) {
                 })
                 .catch(error => console.error("Gagal memuat GeoJSON:", error));
         }
-
+        
         // Membuat point markers untuk pasien
         function createPatientMarkers() {
             patientsLayer.clearLayers();
-
+            
             patients.forEach(function(patient, index) {
                 var marker = L.marker([parseFloat(patient.latitude), parseFloat(patient.longitude)], {
                     icon: L.divIcon({
@@ -634,7 +631,7 @@ if ($patients_result->num_rows > 0) {
                         iconAnchor: [15, 30] /* Titik jangkar di ujung bawah pin */
                     })
                 }).addTo(patientsLayer);
-
+                
                 marker.bindPopup(`
                     <div style="min-width: 150px;">
                         <h6>**<i class="fas fa-user-injured"></i> ${patient.nama}**</h6>
@@ -645,7 +642,7 @@ if ($patients_result->num_rows > 0) {
                 `);
             });
         }
-
+        
         // Fungsi toggle
         function togglePatients() {
             if (map.hasLayer(patientsLayer)) {
@@ -654,7 +651,7 @@ if ($patients_result->num_rows > 0) {
                 map.addLayer(patientsLayer);
             }
         }
-
+        
         function toggleChoropleth() {
             if (map.hasLayer(choroplethLayer)) {
                 map.removeLayer(choroplethLayer);
@@ -662,19 +659,19 @@ if ($patients_result->num_rows > 0) {
                 map.addLayer(choroplethLayer);
             }
         }
-
+        
         function refreshData() {
             location.reload();
         }
-
+        
         function fitToPontianak() {
             map.setView([-0.0263, 109.3425], 12);
         }
-
+        
         // Inisialisasi layers
         createChoropleth();
         createPatientMarkers();
-
+        
         // JavaScript for sidebar navigation
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -690,7 +687,7 @@ if ($patients_result->num_rows > 0) {
                     if (targetId === 'risk-map' || targetId === 'dashboard-overview') {
                         setTimeout(() => {
                             map.invalidateSize();
-                        }, 0);
+                        }, 0); 
                     }
                 }
             }
@@ -700,10 +697,10 @@ if ($patients_result->num_rows > 0) {
                     const targetId = this.getAttribute('data-target');
                     if (targetId) {
                         e.preventDefault();
-
+                        
                         sidebarLinks.forEach(item => item.classList.remove('active'));
                         this.classList.add('active');
-
+                        
                         showSection(targetId);
                     }
                 });
