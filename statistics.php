@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+include 'db.php'; // Memasukkan koneksi database dan memulai sesi
 
 // Autentikasi: Hanya user yang login yang bisa mengakses
 if (!isset($_SESSION['user_id'])) {
@@ -62,6 +62,7 @@ while ($row = $historical_result->fetch_assoc()) {
     
     $chart_data[$kecamatan_name]['dates'][] = $record_date;
     
+    // Konversi tingkat risiko ke nilai numerik untuk diagram
     $risk_numeric = 0;
     switch ($risk_level) {
         case 'Tinggi': $risk_numeric = 3; break;
@@ -92,6 +93,7 @@ foreach ($kecamatan_names as $name) {
     ];
 }
 
+// Konversi data PHP ke JSON untuk JavaScript
 $json_all_dates = json_encode($all_dates);
 $json_chart_datasets = json_encode($final_chart_datasets);
 $json_kecamatan_names = json_encode($kecamatan_names);
@@ -267,7 +269,6 @@ $years = range(date("Y"), date("Y") - 5);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
 
-        /* Responsive: sidebar jadi fixed, konten geser ke kanan */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
